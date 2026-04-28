@@ -26,6 +26,16 @@
     </header>
 
     <main>
+        {% if messages %}
+            <section class="messages-wrap">
+                {% for message in messages %}
+                    <div class="message message-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
         {% block content %}{% endblock %}
     </main>
 

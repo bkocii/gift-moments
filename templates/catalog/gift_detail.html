@@ -45,10 +45,99 @@
                 {% endif %}
             </div>
 
-            <div class="detail-footer">
-                <strong>From €{{ gift_box.base_price }}</strong>
-                <a href="#" class="btn btn-primary">Customize Gift</a>
+            <div class="customization-box">
+                <div class="customization-head">
+                    <h2>Customize your gift</h2>
+                    <strong>From €{{ gift_box.base_price }}</strong>
+                </div>
+
+                <form method="post" novalidate class="gift-form">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="form-errors">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="{{ form.recipient_name.id_for_label }}">Recipient name</label>
+                            {{ form.recipient_name }}
+                            {% if form.recipient_name.errors %}
+                                <div class="field-error">{{ form.recipient_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <label for="{{ form.delivery_date.id_for_label }}">Delivery date</label>
+                            {{ form.delivery_date }}
+                            {% if form.delivery_date.errors %}
+                                <div class="field-error">{{ form.delivery_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="{{ form.gift_message.id_for_label }}">Gift message</label>
+                        {{ form.gift_message }}
+                        {% if form.gift_message.errors %}
+                            <div class="field-error">{{ form.gift_message.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% for item in option_group_fields %}
+                        <div class="option-group">
+                            <div class="option-group-head">
+                                <h3>{{ item.group.name }}</h3>
+                                {% if item.group.is_required %}
+                                    <span class="required-badge">Required</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="option-group-body">
+                                {{ item.field }}
+                                {% if item.field.errors %}
+                                    <div class="field-error">{{ item.field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary">
+                        Save customization
+                    </button>
+                </form>
             </div>
+
+            {% if submitted_data %}
+                <div class="submitted-preview">
+                    <h2>Saved customization preview</h2>
+
+                    <ul>
+                        <li><strong>Recipient:</strong> {{ submitted_data.recipient_name }}</li>
+                        <li><strong>Delivery date:</strong> {{ submitted_data.delivery_date }}</li>
+
+                        {% if submitted_data.gift_message %}
+                            <li><strong>Message:</strong> {{ submitted_data.gift_message }}</li>
+                        {% endif %}
+                    </ul>
+
+                    {% if submitted_data.selected_options %}
+                        <div class="selected-options-preview">
+                            <h3>Selected options</h3>
+                            <ul>
+                                {% for group_name, value in submitted_data.selected_options.items %}
+                                    <li>
+                                        <strong>{{ group_name }}:</strong>
+                                        {{ value }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
     </div>
 </section>
