@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ gift_box.name }} | Gift Moments{% endblock %}
+
+{% block content %}
+<section class="detail-page">
+    <div class="detail-card">
+        <div class="detail-image">
+            {% if gift_box.image %}
+                <img src="{{ gift_box.image.url }}" alt="{{ gift_box.name }}">
+            {% else %}
+                <div class="image-placeholder">
+                    <span>🎁</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="detail-content">
+            <span class="eyebrow">Curated gift box</span>
+            <h1>{{ gift_box.name }}</h1>
+            <p>{{ gift_box.short_description }}</p>
+
+            {% if gift_box.description %}
+                <div class="description">
+                    {{ gift_box.description|linebreaks }}
+                </div>
+            {% endif %}
+
+            <div class="included-box">
+                <h2>Included</h2>
+
+                {% if gift_box.box_items.exists %}
+                    <ul>
+                        {% for box_item in gift_box.box_items.all %}
+                            <li>
+                                {% if box_item.quantity %}
+                                    <strong>{{ box_item.quantity }}</strong>
+                                {% endif %}
+                                {{ box_item.item.name }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Included items will be listed soon.</p>
+                {% endif %}
+            </div>
+
+            <div class="detail-footer">
+                <strong>From €{{ gift_box.base_price }}</strong>
+                <a href="#" class="btn btn-primary">Customize Gift</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

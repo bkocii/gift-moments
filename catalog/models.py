@@ -1,1 +1,86 @@
-# Create your models here.
+from django.db import models
+from django.urls import reverse
+
+
+class Occasion(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class GiftItem(models.Model):
+    name = models.CharField(max_length=120, unique=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class GiftBox(models.Model):
+    name = models.CharField(max_length=160)
+    slug = models.SlugField(max_length=180, unique=True)
+    occasions = models.ManyToManyField(
+        Occasion,
+        blank=True,
+        related_name="gift_boxes",
+    )
+    short_description = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    base_price = models.DecimalField(max_digits=8, decimal_places=2)
+    image = models.ImageField(upload_to="gift_boxes/", blank=True, null=True)
+
+    is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse("catalog:gift_detail", kwargs={"slug": self.slug})
+
+
+class GiftBoxItem(models.Model):
+    gift_box = models.ForeignKey(
+        GiftBox,
+        on_delete=models.CASCADE,
+        related_name="box_items",
+    )
+    item = models.ForeignKey(
+        GiftItem,
+        on_delete=models.PROTECT,
+        related_name="gift_box_items",
+    )
+    quantity = models.CharField(
+        max_length=80,
+        blank=True,
+        help_text="Example: 12 stems, 250g, 1 bottle",
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "item__name"]
+        unique_together = ["gift_box", "item"]
+
+    def __str__(self):
+        if self.quantity:
+            return f"{self.quantity} {self.item.name}"
+        return self.item.name
