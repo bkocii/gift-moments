@@ -55,8 +55,20 @@
     </div>
 
     <div class="occasion-list">
+        <a
+            href="{% url 'home' %}#gift-boxes"
+            class="occasion-pill {% if not selected_occasion %}active{% endif %}"
+        >
+            All gifts
+        </a>
+
         {% for occasion in occasions %}
-            <a href="#" class="occasion-pill">{{ occasion.name }}</a>
+            <a
+                href="{% url 'home' %}?occasion={{ occasion.slug }}#gift-boxes"
+                class="occasion-pill {% if selected_occasion.slug == occasion.slug %}active{% endif %}"
+            >
+                {{ occasion.name }}
+            </a>
         {% empty %}
             <p>No occasions added yet.</p>
         {% endfor %}
@@ -66,8 +78,16 @@
 <section id="gift-boxes" class="gift-grid-section">
     <div class="section-header">
         <span class="eyebrow">Popular choices</span>
-        <h2>Featured gift boxes</h2>
-        <p>Curated combinations of flowers, sweets, wine and handwritten notes.</p>
+
+        {% if selected_occasion %}
+            <h2>{{ selected_occasion.name }} gift boxes</h2>
+            <p>
+                Curated gift boxes selected for {{ selected_occasion.name|lower }} moments.
+            </p>
+        {% else %}
+            <h2>Featured gift boxes</h2>
+            <p>Curated combinations of flowers, sweets, wine and handwritten notes.</p>
+        {% endif %}
     </div>
 
     <div class="gift-grid">
@@ -115,8 +135,16 @@
             </article>
         {% empty %}
             <div class="empty-state">
-                <h3>No gift boxes yet</h3>
-                <p>Add featured gift boxes from Django admin to show them here.</p>
+                {% if selected_occasion %}
+                    <h3>No {{ selected_occasion.name|lower }} gift boxes yet</h3>
+                    <p>Add featured gift boxes for this occasion from Django admin.</p>
+                    <a href="{% url 'home' %}#gift-boxes" class="btn btn-secondary">
+                        View all gifts
+                    </a>
+                {% else %}
+                    <h3>No gift boxes yet</h3>
+                    <p>Add featured gift boxes from Django admin to show them here.</p>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
