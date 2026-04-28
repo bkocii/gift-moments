@@ -62,6 +62,7 @@ def test_home_page_does_not_show_unfeatured_gift_boxes(client):
     assert response.status_code == 200
     assert b"Normal Gift Box" not in response.content
 
+
 @pytest.mark.django_db
 def test_home_page_filters_gift_boxes_by_occasion(client):
     romantic = Occasion.objects.create(name="Romantic", slug="romantic")

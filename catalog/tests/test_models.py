@@ -1,6 +1,13 @@
 import pytest
 
-from catalog.models import GiftBox, GiftBoxItem, GiftItem, Occasion
+from catalog.models import (
+    GiftBox,
+    GiftBoxItem,
+    GiftItem,
+    GiftOption,
+    GiftOptionGroup,
+    Occasion,
+)
 
 
 @pytest.mark.django_db
@@ -51,3 +58,70 @@ def test_gift_box_absolute_url():
     )
 
     assert gift_box.get_absolute_url() == "/gifts/premium-gift-box/"
+
+
+@pytest.mark.django_db
+def test_gift_option_group_string_representation():
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses and wine.",
+        base_price="49.90",
+    )
+
+    group = GiftOptionGroup.objects.create(
+        gift_box=gift_box,
+        name="Flower color",
+        slug="flower-color",
+        input_type=GiftOptionGroup.InputType.RADIO,
+        is_required=True,
+    )
+
+    assert str(group) == "Romantic Evening Box - Flower color"
+
+
+@pytest.mark.django_db
+def test_gift_option_string_without_price_delta():
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses and wine.",
+        base_price="49.90",
+    )
+    group = GiftOptionGroup.objects.create(
+        gift_box=gift_box,
+        name="Flower color",
+        slug="flower-color",
+    )
+
+    option = GiftOption.objects.create(
+        group=group,
+        name="Red roses",
+        slug="red-roses",
+    )
+
+    assert str(option) == "Red roses"
+
+
+@pytest.mark.django_db
+def test_gift_option_string_with_price_delta():
+    gift_box = GiftBox.objects.create(
+        name="Luxury Gift Box",
+        slug="luxury-gift-box",
+        short_description="Premium curated gift.",
+        base_price="89.90",
+    )
+    group = GiftOptionGroup.objects.create(
+        gift_box=gift_box,
+        name="Wine option",
+        slug="wine-option",
+    )
+
+    option = GiftOption.objects.create(
+        group=group,
+        name="Premium red wine",
+        slug="premium-red-wine",
+        price_delta="12.50",
+    )
+
+    assert str(option) == "Premium red wine (+€12.50)"

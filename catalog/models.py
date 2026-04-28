@@ -84,3 +84,59 @@ class GiftBoxItem(models.Model):
         if self.quantity:
             return f"{self.quantity} {self.item.name}"
         return self.item.name
+
+
+class GiftOptionGroup(models.Model):
+    class InputType(models.TextChoices):
+        RADIO = "radio", "Radio"
+        SELECT = "select", "Dropdown"
+        CHECKBOX = "checkbox", "Checkbox"
+
+    gift_box = models.ForeignKey(
+        GiftBox,
+        on_delete=models.CASCADE,
+        related_name="option_groups",
+    )
+    name = models.CharField(max_length=120)
+    slug = models.SlugField(max_length=140)
+    input_type = models.CharField(
+        max_length=20,
+        choices=InputType.choices,
+        default=InputType.RADIO,
+    )
+    is_required = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        unique_together = ["gift_box", "slug"]
+
+    def __str__(self):
+        return f"{self.gift_box.name} - {self.name}"
+
+
+class GiftOption(models.Model):
+    group = models.ForeignKey(
+        GiftOptionGroup,
+        on_delete=models.CASCADE,
+        related_name="options",
+    )
+    name = models.CharField(max_length=120)
+    slug = models.SlugField(max_length=140)
+    price_delta = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        help_text="Extra price added when this option is selected.",
+    )
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        unique_together = ["group", "slug"]
+
+    def __str__(self):
+        if self.price_delta:
+            return f"{self.name} (+€{self.price_delta})"
+        return self.name

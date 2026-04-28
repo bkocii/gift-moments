@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from catalog.models import GiftBox, GiftBoxItem, GiftItem, Occasion
+from catalog.models import (
+    GiftBox,
+    GiftBoxItem,
+    GiftItem,
+    GiftOption,
+    GiftOptionGroup,
+    Occasion,
+)
 
 
 @admin.register(Occasion)
@@ -24,6 +31,29 @@ class GiftBoxItemInline(admin.TabularInline):
     model = GiftBoxItem
     extra = 1
     autocomplete_fields = ("item",)
+
+
+class GiftOptionInline(admin.TabularInline):
+    model = GiftOption
+    extra = 1
+    prepopulated_fields = {"slug": ("name",)}
+
+
+@admin.register(GiftOptionGroup)
+class GiftOptionGroupAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "gift_box",
+        "input_type",
+        "is_required",
+        "sort_order",
+    )
+    list_filter = ("input_type", "is_required", "gift_box")
+    search_fields = ("name", "gift_box__name")
+    prepopulated_fields = {"slug": ("name",)}
+    autocomplete_fields = ("gift_box",)
+    inlines = [GiftOptionInline]
+    ordering = ("gift_box", "sort_order", "name")
 
 
 @admin.register(GiftBox)
