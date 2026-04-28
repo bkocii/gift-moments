@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Gift Moments{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <a href="{% url 'home' %}" class="brand">
+            <span class="brand-icon">🎁</span>
+            <span>
+                <strong>Gift Moments</strong>
+                <small>Curated with love</small>
+            </span>
+        </a>
+
+        <nav class="site-nav">
+            <a href="#">Gift Boxes</a>
+            <a href="#">Build Your Own</a>
+            <a href="#">Occasions</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; {% now "Y" %} Gift Moments. Thoughtful gifts, beautifully delivered.</p>
+    </footer>
+</body>
+</html>

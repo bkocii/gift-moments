@@ -1,11 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Gift Moments</title>
-</head>
-<body>
-    <h1>Gift Moments</h1>
-    <p>Curated gifts, flowers, chocolates, wine, and personal messages.</p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Gift Moments | Curated Gifts{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <span class="eyebrow">Curated gifts delivered beautifully</span>
+
+        <h1>Send flowers, chocolate, wine and a message they’ll remember.</h1>
+
+        <p>
+            Pick a ready-made gift box or customize every detail.
+            We prepare it, wrap it, and deliver it with care.
+        </p>
+
+        <div class="hero-actions">
+            <a href="#" class="btn btn-primary">Shop Gift Boxes</a>
+            <a href="#" class="btn btn-secondary">Build Your Own</a>
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <div class="gift-preview-card">
+            <div class="gift-preview-image"></div>
+            <div class="gift-preview-body">
+                <span class="badge">Popular</span>
+                <h2>Romantic Evening Box</h2>
+                <p>Roses, chocolates, red wine and a handwritten card.</p>
+                <strong>From €49.90</strong>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="trust-strip">
+    <div>
+        <strong>Same-day delivery</strong>
+        <span>Available for selected areas</span>
+    </div>
+    <div>
+        <strong>Beautifully wrapped</strong>
+        <span>Premium packaging included</span>
+    </div>
+    <div>
+        <strong>Personal messages</strong>
+        <span>Add a custom gift card</span>
+    </div>
+</section>
+{% endblock %}
