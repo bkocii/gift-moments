@@ -15,7 +15,7 @@
         </p>
 
         <div class="hero-actions">
-            <a href="#" class="btn btn-primary">Shop Gift Boxes</a>
+            <a href="#gift-boxes" class="btn btn-primary">Shop Gift Boxes</a>
             <a href="#" class="btn btn-secondary">Build Your Own</a>
         </div>
     </div>
@@ -45,6 +45,80 @@
     <div>
         <strong>Personal messages</strong>
         <span>Add a custom gift card</span>
+    </div>
+</section>
+
+<section class="occasion-section">
+    <div class="section-header">
+        <span class="eyebrow">Find the right mood</span>
+        <h2>Choose by occasion</h2>
+    </div>
+
+    <div class="occasion-list">
+        {% for occasion in occasions %}
+            <a href="#" class="occasion-pill">{{ occasion.name }}</a>
+        {% empty %}
+            <p>No occasions added yet.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section id="gift-boxes" class="gift-grid-section">
+    <div class="section-header">
+        <span class="eyebrow">Popular choices</span>
+        <h2>Featured gift boxes</h2>
+        <p>Curated combinations of flowers, sweets, wine and handwritten notes.</p>
+    </div>
+
+    <div class="gift-grid">
+        {% for gift in featured_gifts %}
+            <article class="gift-card">
+                <a href="{{ gift.get_absolute_url }}" class="gift-card-image">
+                    {% if gift.image %}
+                        <img src="{{ gift.image.url }}" alt="{{ gift.name }}">
+                    {% else %}
+                        <div class="gift-card-placeholder">
+                            <span>🎁</span>
+                        </div>
+                    {% endif %}
+
+                    {% if gift.is_featured %}
+                        <span class="badge gift-card-badge">Featured</span>
+                    {% endif %}
+                </a>
+
+                <div class="gift-card-body">
+                    <h3>
+                        <a href="{{ gift.get_absolute_url }}">{{ gift.name }}</a>
+                    </h3>
+
+                    <p>{{ gift.short_description }}</p>
+
+                    <ul class="gift-includes">
+                        {% for box_item in gift.box_items.all|slice:":4" %}
+                            <li>
+                                {% if box_item.quantity %}
+                                    <strong>{{ box_item.quantity }}</strong>
+                                {% endif %}
+                                {{ box_item.item.name }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="gift-card-footer">
+                        <strong>From €{{ gift.base_price }}</strong>
+                        <a href="{{ gift.get_absolute_url }}" class="btn btn-small">
+                            Customize
+                        </a>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state">
+                <h3>No gift boxes yet</h3>
+                <p>Add featured gift boxes from Django admin to show them here.</p>
+            </div>
+        {% endfor %}
     </div>
 </section>
 {% endblock %}
