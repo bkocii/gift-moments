@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from catalog.forms import GiftCustomizationForm
 from catalog.models import GiftBox, GiftOptionGroup
+from orders.cart import add_to_cart
 
 
 def gift_detail(request, slug):
@@ -20,7 +21,6 @@ def gift_detail(request, slug):
     option_groups = gift_box.option_groups.prefetch_related("options").all()
 
     form = GiftCustomizationForm(request.POST or None)
-
     group_options_map = {}
 
     for group in option_groups:
@@ -55,13 +55,18 @@ def gift_detail(request, slug):
             )
 
     option_group_fields = [
-        {"group": group, "field": form[group.slug]} for group in option_groups
+        {
+            "group": group,
+            "field": form[group.slug],
+        }
+        for group in option_groups
     ]
 
     submitted_data = None
 
     if request.method == "POST" and form.is_valid():
-        total_price = gift_box.base_price
+        quantity = form.cleaned_data["quantity"]
+        unit_price = gift_box.base_price
         selected_options = []
 
         for group in option_groups:
@@ -77,13 +82,19 @@ def gift_detail(request, slug):
                 ]
 
                 for option in selected_group_options:
-                    total_price += option.price_delta
+                    unit_price += option.price_delta
 
                 selected_options.append(
                     {
                         "group_name": group.name,
                         "is_multiple": True,
-                        "options": selected_group_options,
+                        "options": [
+                            {
+                                "name": option.name,
+                                "price_delta": str(option.price_delta),
+                            }
+                            for option in selected_group_options
+                        ],
                     }
                 )
             else:
@@ -92,29 +103,50 @@ def gift_detail(request, slug):
                 )
 
                 if selected_option:
-                    total_price += selected_option.price_delta
+                    unit_price += selected_option.price_delta
 
                 selected_options.append(
                     {
                         "group_name": group.name,
                         "is_multiple": False,
-                        "option": selected_option,
+                        "option": (
+                            {
+                                "name": selected_option.name,
+                                "price_delta": str(selected_option.price_delta),
+                            }
+                            if selected_option
+                            else None
+                        ),
                     }
                 )
 
+        line_total = unit_price * quantity
+
+        cart_item = {
+            "gift_box_id": gift_box.id,
+            "name": gift_box.name,
+            "slug": gift_box.slug,
+            "base_price": str(gift_box.base_price),
+            "unit_price": str(unit_price),
+            "line_total": str(line_total),
+            "quantity": quantity,
+            "recipient_name": form.cleaned_data["recipient_name"],
+            "gift_message": form.cleaned_data["gift_message"],
+            "delivery_date": form.cleaned_data["delivery_date"].isoformat(),
+            "selected_options": selected_options,
+        }
+
+        add_to_cart(request.session, cart_item)
+
+        messages.success(request, "Gift added to cart successfully.")
+        return redirect("orders:cart")
+
+    if form.is_bound and form.is_valid():
         submitted_data = {
             "recipient_name": form.cleaned_data["recipient_name"],
             "gift_message": form.cleaned_data["gift_message"],
             "delivery_date": form.cleaned_data["delivery_date"],
-            "base_price": gift_box.base_price,
-            "total_price": total_price,
-            "selected_options": selected_options,
         }
-
-        messages.success(
-            request,
-            "Gift customization saved successfully. Cart and checkout come next.",
-        )
 
     return render(
         request,

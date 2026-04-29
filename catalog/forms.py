@@ -31,3 +31,13 @@ class GiftCustomizationForm(forms.Form):
             }
         ),
     )
+    quantity = forms.IntegerField(
+        min_value=1,
+        initial=1,
+        required=True,
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-input",
+            }
+        ),
+    )

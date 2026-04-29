@@ -55,7 +55,7 @@ def test_gift_detail_page_renders_option_group(client):
 
 
 @pytest.mark.django_db
-def test_gift_detail_form_valid_post_shows_success_message(client):
+def test_gift_detail_form_valid_post_redirects_to_cart(client):
     gift_box = GiftBox.objects.create(
         name="Romantic Evening Box",
         slug="romantic-evening-box",
@@ -82,14 +82,13 @@ def test_gift_detail_form_valid_post_shows_success_message(client):
             "recipient_name": "Sara",
             "delivery_date": "2026-05-10",
             "gift_message": "Happy birthday!",
+            "quantity": 1,
             "flower-color": str(option.id),
         },
-        follow=True,
     )
 
-    assert response.status_code == 200
-    assert b"Gift customization saved successfully" in response.content
-    assert b"Sara" in response.content
+    assert response.status_code == 302
+    assert response.url == reverse("orders:cart")
 
 
 @pytest.mark.django_db
@@ -123,7 +122,7 @@ def test_gift_detail_form_invalid_post_shows_required_errors(client):
 
 
 @pytest.mark.django_db
-def test_gift_detail_form_shows_selected_option_name_in_preview(client):
+def test_gift_detail_form_adds_item_with_correct_total_to_cart(client):
     gift_box = GiftBox.objects.create(
         name="Romantic Evening Box",
         slug="romantic-evening-box",
@@ -151,20 +150,20 @@ def test_gift_detail_form_shows_selected_option_name_in_preview(client):
             "recipient_name": "Sara",
             "delivery_date": "2026-05-10",
             "gift_message": "Happy birthday!",
+            "quantity": 1,
             "flower-color": str(option.id),
         },
         follow=True,
     )
 
     assert response.status_code == 200
+    assert b"Shopping cart" in response.content
     assert b"Premium mix" in response.content
     assert b"57.90" in response.content
-    assert b"49.90" in response.content
-
 
 
 @pytest.mark.django_db
-def test_gift_detail_form_calculates_total_price_with_multiple_single_choices(client):
+def test_cart_shows_correct_total_for_multiple_selected_single_choice_options(client):
     gift_box = GiftBox.objects.create(
         name="Luxury Box",
         slug="luxury-box",
@@ -207,6 +206,7 @@ def test_gift_detail_form_calculates_total_price_with_multiple_single_choices(cl
             "recipient_name": "Ariana",
             "delivery_date": "2026-05-12",
             "gift_message": "Enjoy!",
+            "quantity": 1,
             "flower-color": str(flower_option.id),
             "wine-option": str(wine_option.id),
         },
@@ -214,6 +214,7 @@ def test_gift_detail_form_calculates_total_price_with_multiple_single_choices(cl
     )
 
     assert response.status_code == 200
+    assert b"Shopping cart" in response.content
     assert b"Premium mix" in response.content
     assert b"Premium wine" in response.content
     assert b"73.00" in response.content

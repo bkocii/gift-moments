@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Your Cart | Gift Moments{% endblock %}
+
+{% block content %}
+<section class="cart-page">
+    <div class="section-header">
+        <span class="eyebrow">Your selection</span>
+        <h2>Shopping cart</h2>
+        <p>Review your customized gifts before checkout.</p>
+    </div>
+
+    {% if cart_items %}
+        <div class="cart-layout">
+            <div class="cart-items">
+                {% for item in cart_items %}
+                    <article class="cart-card">
+                        <div class="cart-card-head">
+                            <div>
+                                <h3>{{ item.name }}</h3>
+                                <p>For {{ item.recipient_name }}</p>
+                            </div>
+
+                            <form method="post" action="{% url 'orders:cart_remove' forloop.counter0 %}">
+                                {% csrf_token %}
+                                <button type="submit" class="remove-btn">Remove</button>
+                            </form>
+                        </div>
+
+                        <div class="cart-meta">
+                            <p><strong>Delivery date:</strong> {{ item.delivery_date }}</p>
+                            <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+                            <p><strong>Unit price:</strong> €{{ item.unit_price }}</p>
+                            <p><strong>Line total:</strong> €{{ item.line_total }}</p>
+                        </div>
+
+                        {% if item.gift_message %}
+                            <div class="cart-message-box">
+                                <strong>Gift message</strong>
+                                <p>{{ item.gift_message }}</p>
+                            </div>
+                        {% endif %}
+
+                        {% if item.selected_options %}
+                            <div class="cart-options">
+                                <h4>Selected options</h4>
+                                <ul>
+                                    {% for selected in item.selected_options %}
+                                        <li>
+                                            <strong>{{ selected.group_name }}:</strong>
+
+                                            {% if selected.is_multiple %}
+                                                <ul>
+                                                    {% for option in selected.options %}
+                                                        <li>
+                                                            {{ option.name }}
+                                                            {% if option.price_delta != "0.00" and option.price_delta != "0" %}
+                                                                ({% if option.price_delta|first != "-" %}+{% endif %}€{{ option.price_delta }})
+                                                            {% endif %}
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                {% if selected.option %}
+                                                    {{ selected.option.name }}
+                                                    {% if selected.option.price_delta != "0.00" and selected.option.price_delta != "0" %}
+                                                        ({% if selected.option.price_delta|first != "-" %}+{% endif %}€{{ selected.option.price_delta }})
+                                                    {% endif %}
+                                                {% else %}
+                                                    None
+                                                {% endif %}
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+
+            <aside class="cart-summary">
+                <h3>Order summary</h3>
+                <div class="summary-row">
+                    <span>Items</span>
+                    <strong>{{ cart_items|length }}</strong>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <strong>€{{ cart_total }}</strong>
+                </div>
+
+                <a href="#" class="btn btn-primary summary-btn">Checkout next</a>
+            </aside>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Your cart is empty</h3>
+            <p>Add a curated gift box to begin your order.</p>
+            <a href="{% url 'home' %}#gift-boxes" class="btn btn-secondary">Browse gifts</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
