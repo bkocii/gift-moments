@@ -121,16 +121,44 @@
                         {% if submitted_data.gift_message %}
                             <li><strong>Message:</strong> {{ submitted_data.gift_message }}</li>
                         {% endif %}
+
+                        <li><strong>Base price:</strong> €{{ submitted_data.base_price }}</li>
+                        <li><strong>Total price:</strong> €{{ submitted_data.total_price }}</li>
                     </ul>
 
                     {% if submitted_data.selected_options %}
                         <div class="selected-options-preview">
                             <h3>Selected options</h3>
                             <ul>
-                                {% for group_name, value in submitted_data.selected_options.items %}
+                                {% for item in submitted_data.selected_options %}
                                     <li>
-                                        <strong>{{ group_name }}:</strong>
-                                        {{ value }}
+                                        <strong>{{ item.group_name }}:</strong>
+
+                                        {% if item.is_multiple %}
+                                            {% if item.options %}
+                                                <ul>
+                                                    {% for option in item.options %}
+                                                        <li>
+                                                            {{ option.name }}
+                                                            {% if option.price_delta %}
+                                                                ({% if option.price_delta > 0 %}+{% endif %}€{{ option.price_delta }})
+                                                            {% endif %}
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                None
+                                            {% endif %}
+                                        {% else %}
+                                            {% if item.option %}
+                                                {{ item.option.name }}
+                                                {% if item.option.price_delta %}
+                                                    ({% if item.option.price_delta > 0 %}+{% endif %}€{{ item.option.price_delta }})
+                                                {% endif %}
+                                            {% else %}
+                                                None
+                                            {% endif %}
+                                        {% endif %}
                                     </li>
                                 {% endfor %}
                             </ul>

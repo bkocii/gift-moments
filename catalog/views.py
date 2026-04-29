@@ -21,10 +21,15 @@ def gift_detail(request, slug):
 
     form = GiftCustomizationForm(request.POST or None)
 
+    group_options_map = {}
+
     for group in option_groups:
-        active_options = group.options.filter(is_active=True).order_by(
-            "sort_order", "name"
+        active_options = list(
+            group.options.filter(is_active=True).order_by("sort_order", "name")
         )
+        group_options_map[group.slug] = {
+            str(option.id): option for option in active_options
+        }
         choices = [(str(option.id), str(option)) for option in active_options]
 
         if group.input_type == GiftOptionGroup.InputType.SELECT:
@@ -50,27 +55,61 @@ def gift_detail(request, slug):
             )
 
     option_group_fields = [
-        {
-            "group": group,
-            "field": form[group.slug],
-        }
-        for group in option_groups
+        {"group": group, "field": form[group.slug]} for group in option_groups
     ]
 
     submitted_data = None
 
     if request.method == "POST" and form.is_valid():
+        total_price = gift_box.base_price
+        selected_options = []
+
+        for group in option_groups:
+            submitted_value = form.cleaned_data.get(group.slug)
+            group_map = group_options_map.get(group.slug, {})
+
+            if group.input_type == GiftOptionGroup.InputType.CHECKBOX:
+                selected_ids = submitted_value or []
+                selected_group_options = [
+                    group_map[option_id]
+                    for option_id in selected_ids
+                    if option_id in group_map
+                ]
+
+                for option in selected_group_options:
+                    total_price += option.price_delta
+
+                selected_options.append(
+                    {
+                        "group_name": group.name,
+                        "is_multiple": True,
+                        "options": selected_group_options,
+                    }
+                )
+            else:
+                selected_option = (
+                    group_map.get(submitted_value) if submitted_value else None
+                )
+
+                if selected_option:
+                    total_price += selected_option.price_delta
+
+                selected_options.append(
+                    {
+                        "group_name": group.name,
+                        "is_multiple": False,
+                        "option": selected_option,
+                    }
+                )
+
         submitted_data = {
             "recipient_name": form.cleaned_data["recipient_name"],
             "gift_message": form.cleaned_data["gift_message"],
             "delivery_date": form.cleaned_data["delivery_date"],
-            "selected_options": {},
+            "base_price": gift_box.base_price,
+            "total_price": total_price,
+            "selected_options": selected_options,
         }
-
-        for group in option_groups:
-            submitted_data["selected_options"][group.name] = form.cleaned_data.get(
-                group.slug
-            )
 
         messages.success(
             request,
