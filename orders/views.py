@@ -10,6 +10,7 @@ from orders.cart import (
     remove_from_cart,
     update_cart_item_quantity,
 )
+from orders.emails import send_order_confirmation_email
 from orders.forms import CheckoutForm
 from orders.models import Order, OrderItem
 
@@ -92,6 +93,8 @@ def checkout(request):
                 line_total=Decimal(str(item["line_total"])),
                 selected_options=item["selected_options"],
             )
+
+        send_order_confirmation_email(order)
 
         clear_cart(request.session)
         messages.success(request, "Your order has been placed successfully.")

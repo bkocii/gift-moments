@@ -1,4 +1,5 @@
 import pytest
+from django.core import mail
 from django.urls import reverse
 
 from orders.models import Order, OrderItem
@@ -166,3 +167,43 @@ def test_checkout_does_not_prefill_recipient_name_when_multiple_cart_items(clien
     assert response.status_code == 200
     assert b'value="Sara"' not in response.content
     assert b'value="Ariana"' not in response.content
+
+
+@pytest.mark.django_db
+def test_checkout_sends_confirmation_email(client):
+    session = client.session
+    session["cart_items"] = [
+        {
+            "gift_box_id": 1,
+            "name": "Romantic Evening Box",
+            "slug": "romantic-evening-box",
+            "base_price": "49.90",
+            "unit_price": "57.90",
+            "line_total": "57.90",
+            "quantity": 1,
+            "recipient_name": "Sara",
+            "gift_message": "Happy birthday!",
+            "delivery_date": "2026-05-10",
+            "selected_options": [],
+        }
+    ]
+    session.save()
+
+    response = client.post(
+        reverse("orders:checkout"),
+        data={
+            "sender_name": "Burim",
+            "sender_email": "burim@example.com",
+            "sender_phone": "12345",
+            "recipient_name": "Sara",
+            "recipient_phone": "67890",
+            "delivery_address": "Main street 10",
+            "delivery_notes": "Call on arrival",
+        },
+    )
+
+    assert response.status_code == 302
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == ["burim@example.com"]
+    assert "order #" in mail.outbox[0].subject.lower()
+

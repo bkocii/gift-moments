@@ -1,0 +1,30 @@
+<h2>Thank you for your order, {{ order.sender_name }}.</h2>
+
+<p>Your order reference is <strong>#{{ order.id }}</strong>.</p>
+
+<p>
+    <strong>Recipient:</strong> {{ order.recipient_name }}<br>
+    <strong>Delivery address:</strong> {{ order.delivery_address }}<br>
+    <strong>Total:</strong> €{{ order.total_amount }}
+</p>
+
+<h3>Ordered items</h3>
+<ul>
+    {% for item in order.items.all %}
+        <li>
+            <strong>{{ item.gift_box_name }}</strong>
+            × {{ item.quantity }}
+            — €{{ item.line_total }}
+            <br>
+            For {{ item.recipient_name }} on {{ item.delivery_date }}
+            {% if item.gift_message %}
+                <br>
+                Message: {{ item.gift_message }}
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+
+<p>We’ll contact you if anything needs clarification.</p>
+
+<p>Gift Moments</p>
