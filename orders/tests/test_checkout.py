@@ -206,4 +206,3 @@ def test_checkout_sends_confirmation_email(client):
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == ["burim@example.com"]
     assert "order #" in mail.outbox[0].subject.lower()
-

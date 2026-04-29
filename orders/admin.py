@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.safestring import mark_safe
 
 from orders.models import Order, OrderItem
@@ -101,6 +101,46 @@ class OrderItemInline(admin.TabularInline):
     selected_options_display.short_description = "Selected options"
 
 
+@admin.action(description="Mark selected orders as confirmed")
+def mark_as_confirmed(modeladmin, request, queryset):
+    updated = queryset.update(status=Order.Status.CONFIRMED)
+    modeladmin.message_user(
+        request,
+        f"{updated} order(s) marked as confirmed.",
+        level=messages.SUCCESS,
+    )
+
+
+@admin.action(description="Mark selected orders as preparing")
+def mark_as_preparing(modeladmin, request, queryset):
+    updated = queryset.update(status=Order.Status.PREPARING)
+    modeladmin.message_user(
+        request,
+        f"{updated} order(s) marked as preparing.",
+        level=messages.SUCCESS,
+    )
+
+
+@admin.action(description="Mark selected orders as delivered")
+def mark_as_delivered(modeladmin, request, queryset):
+    updated = queryset.update(status=Order.Status.DELIVERED)
+    modeladmin.message_user(
+        request,
+        f"{updated} order(s) marked as delivered.",
+        level=messages.SUCCESS,
+    )
+
+
+@admin.action(description="Mark selected orders as cancelled")
+def mark_as_cancelled(modeladmin, request, queryset):
+    updated = queryset.update(status=Order.Status.CANCELLED)
+    modeladmin.message_user(
+        request,
+        f"{updated} order(s) marked as cancelled.",
+        level=messages.WARNING,
+    )
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
@@ -109,17 +149,33 @@ class OrderAdmin(admin.ModelAdmin):
         "recipient_name",
         "status",
         "total_amount",
+        "item_count",
         "created_at",
     )
     list_filter = ("status", "created_at")
     search_fields = (
+        "id",
         "sender_name",
         "sender_email",
         "recipient_name",
         "recipient_phone",
+        "delivery_address",
     )
     readonly_fields = ("created_at", "updated_at", "total_amount")
     inlines = [OrderItemInline]
+    actions = [
+        mark_as_confirmed,
+        mark_as_preparing,
+        mark_as_delivered,
+        mark_as_cancelled,
+    ]
+    date_hierarchy = "created_at"
+    list_per_page = 25
+
+    def item_count(self, obj):
+        return obj.items.count()
+
+    item_count.short_description = "Items"
 
 
 @admin.register(OrderItem)
@@ -134,9 +190,15 @@ class OrderItemAdmin(admin.ModelAdmin):
         "line_total",
         "selected_options_summary",
     )
-    list_filter = ("delivery_date",)
-    search_fields = ("gift_box_name", "recipient_name")
+    list_filter = ("delivery_date", "order__status")
+    search_fields = (
+        "gift_box_name",
+        "recipient_name",
+        "order__id",
+        "order__sender_name",
+    )
     readonly_fields = ("selected_options_display",)
+    list_per_page = 25
 
     fields = (
         "order",
