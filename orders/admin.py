@@ -202,6 +202,26 @@ class OrderAdmin(admin.ModelAdmin):
 
     item_count.short_description = "Items"
 
+    def save_model(self, request, obj, form, change):
+        old_status = None
+
+        if change and obj.pk:
+            old_status = (
+                Order.objects.filter(pk=obj.pk)
+                .values_list("status", flat=True)
+                .first()
+            )
+
+        super().save_model(request, obj, form, change)
+
+        if change and old_status and old_status != obj.status:
+            send_order_status_email(obj)
+            self.message_user(
+                request,
+                f"Status email sent to {obj.sender_email}.",
+                level=messages.SUCCESS,
+            )
+
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
