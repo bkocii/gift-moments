@@ -36,7 +36,15 @@ def checkout(request):
         messages.error(request, "Your cart is empty.")
         return redirect("orders:cart")
 
-    form = CheckoutForm(request.POST or None)
+    initial = {}
+
+    if len(cart_items) == 1 and request.method == "GET":
+        only_item = cart_items[0]
+        initial = {
+            "recipient_name": only_item.get("recipient_name", ""),
+        }
+
+    form = CheckoutForm(request.POST or None, initial=initial)
 
     if request.method == "POST" and form.is_valid():
         order = Order.objects.create(

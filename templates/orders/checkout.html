@@ -83,9 +83,40 @@
             <h3>Order summary</h3>
 
             {% for item in cart_items %}
-                <div class="summary-row">
-                    <span>{{ item.name }} × {{ item.quantity }}</span>
-                    <strong>€{{ item.line_total }}</strong>
+                <div class="checkout-summary-item">
+                    <div class="summary-row">
+                        <span>{{ item.name }} × {{ item.quantity }}</span>
+                        <strong>€{{ item.line_total }}</strong>
+                    </div>
+
+                    <div class="checkout-summary-meta">
+                        <div><strong>For:</strong> {{ item.recipient_name }}</div>
+                        <div><strong>Delivery:</strong> {{ item.delivery_date }}</div>
+
+                        {% if item.selected_options %}
+                            <div class="checkout-summary-options">
+                                {% for selected in item.selected_options %}
+                                    <div>
+                                        <strong>{{ selected.group_name }}:</strong>
+
+                                        {% if selected.is_multiple %}
+                                            {% for option in selected.options %}
+                                                {{ option.name }}{% if not forloop.last %}, {% endif %}
+                                            {% empty %}
+                                                None
+                                            {% endfor %}
+                                        {% else %}
+                                            {% if selected.option %}
+                                                {{ selected.option.name }}
+                                            {% else %}
+                                                None
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             {% endfor %}
 

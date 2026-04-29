@@ -100,3 +100,69 @@ def test_checkout_success_returns_404_for_missing_order(client):
     )
 
     assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_checkout_prefills_recipient_name_when_single_cart_item(client):
+    session = client.session
+    session["cart_items"] = [
+        {
+            "gift_box_id": 1,
+            "name": "Romantic Evening Box",
+            "slug": "romantic-evening-box",
+            "base_price": "49.90",
+            "unit_price": "57.90",
+            "line_total": "57.90",
+            "quantity": 1,
+            "recipient_name": "Sara",
+            "gift_message": "Happy birthday!",
+            "delivery_date": "2026-05-10",
+            "selected_options": [],
+        }
+    ]
+    session.save()
+
+    response = client.get(reverse("orders:checkout"))
+
+    assert response.status_code == 200
+    assert b'value="Sara"' in response.content
+
+
+@pytest.mark.django_db
+def test_checkout_does_not_prefill_recipient_name_when_multiple_cart_items(client):
+    session = client.session
+    session["cart_items"] = [
+        {
+            "gift_box_id": 1,
+            "name": "Gift 1",
+            "slug": "gift-1",
+            "base_price": "20.00",
+            "unit_price": "20.00",
+            "line_total": "20.00",
+            "quantity": 1,
+            "recipient_name": "Sara",
+            "gift_message": "",
+            "delivery_date": "2026-05-10",
+            "selected_options": [],
+        },
+        {
+            "gift_box_id": 2,
+            "name": "Gift 2",
+            "slug": "gift-2",
+            "base_price": "30.00",
+            "unit_price": "30.00",
+            "line_total": "30.00",
+            "quantity": 1,
+            "recipient_name": "Ariana",
+            "gift_message": "",
+            "delivery_date": "2026-05-11",
+            "selected_options": [],
+        },
+    ]
+    session.save()
+
+    response = client.get(reverse("orders:checkout"))
+
+    assert response.status_code == 200
+    assert b'value="Sara"' not in response.content
+    assert b'value="Ariana"' not in response.content
