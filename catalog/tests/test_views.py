@@ -218,3 +218,40 @@ def test_cart_shows_correct_total_for_multiple_selected_single_choice_options(cl
     assert b"Premium mix" in response.content
     assert b"Premium wine" in response.content
     assert b"73.00" in response.content
+
+
+@pytest.mark.django_db
+def test_gift_detail_form_rejects_past_delivery_date(client):
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses, chocolates and wine.",
+        base_price="49.90",
+        is_active=True,
+    )
+    group = GiftOptionGroup.objects.create(
+        gift_box=gift_box,
+        name="Flower color",
+        slug="flower-color",
+        input_type=GiftOptionGroup.InputType.RADIO,
+        is_required=True,
+    )
+    option = GiftOption.objects.create(
+        group=group,
+        name="Red roses",
+        slug="red-roses",
+    )
+
+    response = client.post(
+        reverse("catalog:gift_detail", kwargs={"slug": gift_box.slug}),
+        data={
+            "recipient_name": "Sara",
+            "delivery_date": "2020-01-01",
+            "gift_message": "Happy birthday!",
+            "quantity": 1,
+            "flower-color": str(option.id),
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"Delivery date cannot be in the past." in response.content

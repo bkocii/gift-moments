@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 
 
 class GiftCustomizationForm(forms.Form):
@@ -41,3 +42,11 @@ class GiftCustomizationForm(forms.Form):
             }
         ),
     )
+
+    def clean_delivery_date(self):
+        delivery_date = self.cleaned_data["delivery_date"]
+
+        if delivery_date < timezone.localdate():
+            raise forms.ValidationError("Delivery date cannot be in the past.")
+
+        return delivery_date

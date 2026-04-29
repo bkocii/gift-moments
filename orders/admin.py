@@ -4,6 +4,72 @@ from django.utils.safestring import mark_safe
 from orders.models import Order, OrderItem
 
 
+def build_selected_options_html(selected_options):
+    if not selected_options:
+        return "-"
+
+    parts = []
+
+    for item in selected_options:
+        group_name = item.get("group_name", "Option")
+
+        if item.get("is_multiple"):
+            options = item.get("options", [])
+            if options:
+                option_lines = []
+                for option in options:
+                    name = option.get("name", "")
+                    delta = option.get("price_delta", "0.00")
+                    if delta not in ("0", "0.00", "", None):
+                        prefix = "+" if not str(delta).startswith("-") else ""
+                        option_lines.append(f"{name} ({prefix}€{delta})")
+                    else:
+                        option_lines.append(name)
+                value = "<br>".join(option_lines)
+            else:
+                value = "None"
+        else:
+            option = item.get("option")
+            if option:
+                name = option.get("name", "")
+                delta = option.get("price_delta", "0.00")
+                if delta not in ("0", "0.00", "", None):
+                    prefix = "+" if not str(delta).startswith("-") else ""
+                    value = f"{name} ({prefix}€{delta})"
+                else:
+                    value = name
+            else:
+                value = "None"
+
+        parts.append(f"<strong>{group_name}:</strong> {value}")
+
+    return "<br><br>".join(parts)
+
+
+def build_selected_options_summary(selected_options):
+    if not selected_options:
+        return "-"
+
+    parts = []
+
+    for item in selected_options:
+        group_name = item.get("group_name", "Option")
+
+        if item.get("is_multiple"):
+            options = item.get("options", [])
+            option_names = ", ".join(
+                option.get("name", "") for option in options if option
+            )
+            value = option_names or "None"
+        else:
+            option = item.get("option")
+            value = option.get("name", "None") if option else "None"
+
+        parts.append(f"{group_name}: {value}")
+
+    return " | ".join(parts)
+
+
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
@@ -30,46 +96,7 @@ class OrderItemInline(admin.TabularInline):
     )
 
     def selected_options_display(self, obj):
-        if not obj.selected_options:
-            return "-"
-
-        parts = []
-
-        for item in obj.selected_options:
-            group_name = item.get("group_name", "Option")
-
-            if item.get("is_multiple"):
-                options = item.get("options", [])
-                if options:
-                    option_lines = []
-                    for option in options:
-                        name = option.get("name", "")
-                        delta = option.get("price_delta", "0.00")
-                        if delta not in ("0", "0.00", "", None):
-                            prefix = "+" if not str(delta).startswith("-") else ""
-                            option_lines.append(f"{name} ({prefix}€{delta})")
-                        else:
-                            option_lines.append(name)
-
-                    value = "<br>".join(option_lines)
-                else:
-                    value = "None"
-            else:
-                option = item.get("option")
-                if option:
-                    name = option.get("name", "")
-                    delta = option.get("price_delta", "0.00")
-                    if delta not in ("0", "0.00", "", None):
-                        prefix = "+" if not str(delta).startswith("-") else ""
-                        value = f"{name} ({prefix}€{delta})"
-                    else:
-                        value = name
-                else:
-                    value = "None"
-
-            parts.append(f"<strong>{group_name}:</strong> {value}")
-
-        return mark_safe(obj.formatted_selected_options())
+        return mark_safe(build_selected_options_html(obj.selected_options))
 
     selected_options_display.short_description = "Selected options"
 
@@ -105,6 +132,7 @@ class OrderItemAdmin(admin.ModelAdmin):
         "recipient_name",
         "delivery_date",
         "line_total",
+        "selected_options_summary",
     )
     list_filter = ("delivery_date",)
     search_fields = ("gift_box_name", "recipient_name")
@@ -125,45 +153,11 @@ class OrderItemAdmin(admin.ModelAdmin):
     )
 
     def selected_options_display(self, obj):
-        if not obj.selected_options:
-            return "-"
-
-        parts = []
-
-        for item in obj.selected_options:
-            group_name = item.get("group_name", "Option")
-
-            if item.get("is_multiple"):
-                options = item.get("options", [])
-                if options:
-                    option_lines = []
-                    for option in options:
-                        name = option.get("name", "")
-                        delta = option.get("price_delta", "0.00")
-                        if delta not in ("0", "0.00", "", None):
-                            prefix = "+" if not str(delta).startswith("-") else ""
-                            option_lines.append(f"{name} ({prefix}€{delta})")
-                        else:
-                            option_lines.append(name)
-
-                    value = "<br>".join(option_lines)
-                else:
-                    value = "None"
-            else:
-                option = item.get("option")
-                if option:
-                    name = option.get("name", "")
-                    delta = option.get("price_delta", "0.00")
-                    if delta not in ("0", "0.00", "", None):
-                        prefix = "+" if not str(delta).startswith("-") else ""
-                        value = f"{name} ({prefix}€{delta})"
-                    else:
-                        value = name
-                else:
-                    value = "None"
-
-            parts.append(f"<strong>{group_name}:</strong> {value}")
-
-        return mark_safe("<br><br>".join(parts))
+        return mark_safe(build_selected_options_html(obj.selected_options))
 
     selected_options_display.short_description = "Selected options"
+
+    def selected_options_summary(self, obj):
+        return build_selected_options_summary(obj.selected_options)
+
+    selected_options_summary.short_description = "Options"

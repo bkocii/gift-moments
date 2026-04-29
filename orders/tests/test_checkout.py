@@ -91,3 +91,12 @@ def test_checkout_success_page_loads(client):
     assert response.status_code == 200
     assert b"Order placed successfully" in response.content
     assert b"115.80" in response.content
+
+
+@pytest.mark.django_db
+def test_checkout_success_returns_404_for_missing_order(client):
+    response = client.get(
+        reverse("orders:checkout_success", kwargs={"order_id": 99999})
+    )
+
+    assert response.status_code == 404

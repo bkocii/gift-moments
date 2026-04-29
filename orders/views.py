@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.contrib import messages
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from orders.cart import cart_total, clear_cart, get_cart, remove_from_cart
 from orders.forms import CheckoutForm
@@ -81,7 +81,10 @@ def checkout(request):
 
 
 def checkout_success(request, order_id):
-    order = Order.objects.prefetch_related("items").get(pk=order_id)
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items"),
+        pk=order_id,
+    )
 
     return render(
         request,
