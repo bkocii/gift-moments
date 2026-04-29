@@ -4,24 +4,113 @@
 
 {% block content %}
 <section class="cart-page">
-    <div class="empty-state">
-        <h3>Order placed successfully</h3>
-        <p>Your order reference is #{{ order.id }}.</p>
-        <p><strong>Total:</strong> €{{ order.total_amount }}</p>
+    <div class="section-header">
+        <span class="eyebrow">Thank you</span>
+        <h2>Order placed successfully</h2>
+        {% if order.status == "pending" %}
+            <p>Your order has been received and is awaiting confirmation.</p>
+        {% elif order.status == "confirmed" %}
+            <p>Your order has been confirmed and will be prepared soon.</p>
+        {% elif order.status == "preparing" %}
+            <p>Your order is currently being prepared.</p>
+        {% elif order.status == "delivered" %}
+            <p>Your order has already been delivered.</p>
+        {% elif order.status == "cancelled" %}
+            <p>This order has been cancelled.</p>
+        {% endif %}
+    </div>
 
-        <div class="selected-options-preview">
-            <h3>Ordered items</h3>
-            <ul>
-                {% for item in order.items.all %}
-                    <li>
-                        <strong>{{ item.gift_box_name }}</strong>
-                        × {{ item.quantity }} — €{{ item.line_total }}
-                    </li>
-                {% endfor %}
-            </ul>
+    <div class="cart-layout">
+        <div class="cart-items">
+            <article class="cart-card">
+                <div class="cart-card-head">
+                    <div>
+                        <h3>Order #{{ order.id }}</h3>
+                        <p>Status: {{ order.get_status_display }}</p>
+                    </div>
+                </div>
+
+                <div class="cart-meta">
+                    <p><strong>Sender:</strong> {{ order.sender_name }}</p>
+                    <p><strong>Email:</strong> {{ order.sender_email }}</p>
+                    <p><strong>Recipient:</strong> {{ order.recipient_name }}</p>
+                    <p><strong>Total:</strong> €{{ order.total_amount }}</p>
+                </div>
+
+                <div class="cart-message-box">
+                    <strong>Delivery address</strong>
+                    <p>{{ order.delivery_address|linebreaksbr }}</p>
+
+                    {% if order.delivery_notes %}
+                        <strong style="margin-top: 12px; display: block;">Delivery notes</strong>
+                        <p>{{ order.delivery_notes|linebreaksbr }}</p>
+                    {% endif %}
+                </div>
+            </article>
+
+            {% for item in order.items.all %}
+                <article class="cart-card">
+                    <div class="cart-card-head">
+                        <div>
+                            <h3>{{ item.gift_box_name }}</h3>
+                            <p>For {{ item.recipient_name }}</p>
+                        </div>
+                    </div>
+
+                    <div class="cart-meta">
+                        <p><strong>Delivery date:</strong> {{ item.delivery_date }}</p>
+                        <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+                        <p><strong>Unit price:</strong> €{{ item.unit_price }}</p>
+                        <p><strong>Line total:</strong> €{{ item.line_total }}</p>
+                    </div>
+
+                    {% if item.gift_message %}
+                        <div class="cart-message-box">
+                            <strong>Gift message</strong>
+                            <p>{{ item.gift_message }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% with option_rows=item.selected_options_summary_list %}
+                        {% if option_rows %}
+                            <div class="cart-options">
+                                <h4>Selected options</h4>
+                                <ul>
+                                    {% for row in option_rows %}
+                                        <li>
+                                            <strong>{{ row.group_name }}:</strong> {{ row.value }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </article>
+            {% endfor %}
         </div>
 
-        <a href="{% url 'home' %}" class="btn btn-secondary">Back to home</a>
+        <aside class="cart-summary">
+            <h3>Next steps</h3>
+
+            <div class="summary-row">
+                <span>Order status</span>
+                <strong>{{ order.get_status_display }}</strong>
+            </div>
+
+            <div class="summary-row">
+                <span>Items</span>
+                <strong>{{ order.items.count }}</strong>
+            </div>
+
+            <div class="summary-row total">
+                <span>Total</span>
+                <strong>€{{ order.total_amount }}</strong>
+            </div>
+
+            <a href="{% url 'home' %}#gift-boxes" class="btn btn-secondary summary-btn">
+                Continue shopping
+            </a>
+        </aside>
     </div>
 </section>
 {% endblock %}

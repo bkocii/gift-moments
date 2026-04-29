@@ -206,3 +206,57 @@ def test_checkout_sends_confirmation_email(client):
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == ["burim@example.com"]
     assert "order #" in mail.outbox[0].subject.lower()
+
+
+@pytest.mark.django_db
+def test_checkout_success_page_shows_item_details_and_selected_options(client):
+    order = Order.objects.create(
+        sender_name="Burim",
+        sender_email="burim@example.com",
+        recipient_name="Sara",
+        delivery_address="Main street 10",
+        total_amount="115.80",
+        status=Order.Status.PENDING,
+    )
+
+    OrderItem.objects.create(
+        order=order,
+        gift_box_name="Romantic Evening Box",
+        gift_box_slug="romantic-evening-box",
+        quantity=2,
+        recipient_name="Sara",
+        gift_message="Happy birthday!",
+        delivery_date="2026-05-10",
+        base_price="49.90",
+        unit_price="57.90",
+        line_total="115.80",
+        selected_options=[
+            {
+                "group_name": "Flower color",
+                "is_multiple": False,
+                "option": {
+                    "name": "Premium mix",
+                    "price_delta": "8.00",
+                },
+            },
+            {
+                "group_name": "Wine option",
+                "is_multiple": False,
+                "option": {
+                    "name": "No wine",
+                    "price_delta": "-8.00",
+                },
+            },
+        ],
+    )
+
+    response = client.get(
+        reverse("orders:checkout_success", kwargs={"order_id": order.id})
+    )
+
+    assert response.status_code == 200
+    assert f"Order #{order.id}".encode() in response.content
+    assert b"Romantic Evening Box" in response.content
+    assert b"Premium mix" in response.content
+    assert b"No wine" in response.content
+    assert b"115.80" in response.content

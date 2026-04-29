@@ -63,6 +63,53 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.gift_box_name} x {self.quantity}"
 
+    def selected_options_summary_list(self):
+        if not self.selected_options:
+            return []
+
+        rows = []
+
+        for item in self.selected_options:
+            group_name = item.get("group_name", "Option")
+
+            if item.get("is_multiple"):
+                options = item.get("options", [])
+                values = []
+
+                for option in options:
+                    name = option.get("name", "")
+                    delta = option.get("price_delta", "0.00")
+
+                    if delta not in ("0", "0.00", "", None):
+                        prefix = "+" if not str(delta).startswith("-") else ""
+                        values.append(f"{name} ({prefix}€{delta})")
+                    else:
+                        values.append(name)
+
+                value = ", ".join(values) if values else "None"
+            else:
+                option = item.get("option")
+                if option:
+                    name = option.get("name", "")
+                    delta = option.get("price_delta", "0.00")
+
+                    if delta not in ("0", "0.00", "", None):
+                        prefix = "+" if not str(delta).startswith("-") else ""
+                        value = f"{name} ({prefix}€{delta})"
+                    else:
+                        value = name
+                else:
+                    value = "None"
+
+            rows.append(
+                {
+                    "group_name": group_name,
+                    "value": value,
+                }
+            )
+
+        return rows
+
     def formatted_selected_options(self):
         if not self.selected_options:
             return "-"

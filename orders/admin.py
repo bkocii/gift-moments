@@ -207,9 +207,7 @@ class OrderAdmin(admin.ModelAdmin):
 
         if change and obj.pk:
             old_status = (
-                Order.objects.filter(pk=obj.pk)
-                .values_list("status", flat=True)
-                .first()
+                Order.objects.filter(pk=obj.pk).values_list("status", flat=True).first()
             )
 
         super().save_model(request, obj, form, change)
