@@ -21,3 +21,23 @@ def send_order_confirmation_email(order):
         recipient_list=[order.sender_email],
         html_message=html_message,
     )
+
+
+def send_order_status_email(order):
+    subject = f"Order #{order.id} status updated to {order.get_status_display()}"
+
+    html_message = render_to_string(
+        "orders/emails/order_status_update.html",
+        {
+            "order": order,
+        },
+    )
+    plain_message = strip_tags(html_message)
+
+    send_mail(
+        subject=subject,
+        message=plain_message,
+        from_email=None,
+        recipient_list=[order.sender_email],
+        html_message=html_message,
+    )

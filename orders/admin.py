@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 from django.utils.safestring import mark_safe
 
+from orders.emails import send_order_status_email
 from orders.models import Order, OrderItem
 
 
@@ -103,7 +104,13 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.action(description="Mark selected orders as confirmed")
 def mark_as_confirmed(modeladmin, request, queryset):
+    orders = list(queryset)
     updated = queryset.update(status=Order.Status.CONFIRMED)
+
+    for order in orders:
+        order.status = Order.Status.CONFIRMED
+        send_order_status_email(order)
+
     modeladmin.message_user(
         request,
         f"{updated} order(s) marked as confirmed.",
@@ -113,7 +120,13 @@ def mark_as_confirmed(modeladmin, request, queryset):
 
 @admin.action(description="Mark selected orders as preparing")
 def mark_as_preparing(modeladmin, request, queryset):
+    orders = list(queryset)
     updated = queryset.update(status=Order.Status.PREPARING)
+
+    for order in orders:
+        order.status = Order.Status.PREPARING
+        send_order_status_email(order)
+
     modeladmin.message_user(
         request,
         f"{updated} order(s) marked as preparing.",
@@ -123,7 +136,13 @@ def mark_as_preparing(modeladmin, request, queryset):
 
 @admin.action(description="Mark selected orders as delivered")
 def mark_as_delivered(modeladmin, request, queryset):
+    orders = list(queryset)
     updated = queryset.update(status=Order.Status.DELIVERED)
+
+    for order in orders:
+        order.status = Order.Status.DELIVERED
+        send_order_status_email(order)
+
     modeladmin.message_user(
         request,
         f"{updated} order(s) marked as delivered.",
@@ -133,7 +152,13 @@ def mark_as_delivered(modeladmin, request, queryset):
 
 @admin.action(description="Mark selected orders as cancelled")
 def mark_as_cancelled(modeladmin, request, queryset):
+    orders = list(queryset)
     updated = queryset.update(status=Order.Status.CANCELLED)
+
+    for order in orders:
+        order.status = Order.Status.CANCELLED
+        send_order_status_email(order)
+
     modeladmin.message_user(
         request,
         f"{updated} order(s) marked as cancelled.",

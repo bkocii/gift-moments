@@ -1,0 +1,25 @@
+<h2>Your order status has been updated.</h2>
+
+<p>
+    <strong>Order reference:</strong> #{{ order.id }}<br>
+    <strong>Current status:</strong> {{ order.get_status_display }}<br>
+    <strong>Total:</strong> €{{ order.total_amount }}
+</p>
+
+<p>
+    <strong>Recipient:</strong> {{ order.recipient_name }}<br>
+    <strong>Delivery address:</strong> {{ order.delivery_address }}
+</p>
+
+<h3>Ordered items</h3>
+<ul>
+    {% for item in order.items.all %}
+        <li>
+            <strong>{{ item.gift_box_name }}</strong>
+            × {{ item.quantity }}
+            — €{{ item.line_total }}
+        </li>
+    {% endfor %}
+</ul>
+
+<p>Gift Moments</p>

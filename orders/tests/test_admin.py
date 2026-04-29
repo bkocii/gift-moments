@@ -1,7 +1,10 @@
 import pytest
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.test import RequestFactory
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.middleware import SessionMiddleware
 
 from orders.admin import (
     OrderAdmin,
@@ -11,6 +14,15 @@ from orders.admin import (
     mark_as_preparing,
 )
 from orders.models import Order
+
+
+def attach_messages_middleware(request):
+    session_middleware = SessionMiddleware(lambda req: None)
+    session_middleware.process_request(request)
+    request.session.save()
+
+    setattr(request, "_messages", FallbackStorage(request))
+    return request
 
 
 @pytest.mark.django_db
@@ -42,6 +54,7 @@ def test_mark_as_confirmed_action():
 
     modeladmin = OrderAdmin(Order, AdminSite())
     request = RequestFactory().get("/admin/")
+    request = attach_messages_middleware(request)
     request.user = get_user_model().objects.create_superuser(
         username="admin1",
         email="admin1@example.com",
@@ -68,6 +81,7 @@ def test_mark_as_preparing_action():
 
     modeladmin = OrderAdmin(Order, AdminSite())
     request = RequestFactory().get("/admin/")
+    request = attach_messages_middleware(request)
     request.user = get_user_model().objects.create_superuser(
         username="admin2",
         email="admin2@example.com",
@@ -94,6 +108,7 @@ def test_mark_as_delivered_action():
 
     modeladmin = OrderAdmin(Order, AdminSite())
     request = RequestFactory().get("/admin/")
+    request = attach_messages_middleware(request)
     request.user = get_user_model().objects.create_superuser(
         username="admin3",
         email="admin3@example.com",
@@ -120,6 +135,7 @@ def test_mark_as_cancelled_action():
 
     modeladmin = OrderAdmin(Order, AdminSite())
     request = RequestFactory().get("/admin/")
+    request = attach_messages_middleware(request)
     request.user = get_user_model().objects.create_superuser(
         username="admin4",
         email="admin4@example.com",
@@ -131,3 +147,59 @@ def test_mark_as_cancelled_action():
 
     order.refresh_from_db()
     assert order.status == Order.Status.CANCELLED
+
+
+@pytest.mark.django_db
+def test_mark_as_confirmed_sends_status_email():
+    order = Order.objects.create(
+        sender_name="Burim",
+        sender_email="burim@example.com",
+        recipient_name="Sara",
+        delivery_address="Main street 10",
+        total_amount="100.00",
+        status=Order.Status.PENDING,
+    )
+
+    modeladmin = OrderAdmin(Order, AdminSite())
+    request = RequestFactory().get("/admin/")
+    request = attach_messages_middleware(request)
+    request.user = get_user_model().objects.create_superuser(
+        username="admin5",
+        email="admin5@example.com",
+        password="testpass123",
+    )
+
+    queryset = Order.objects.filter(id=order.id)
+    mark_as_confirmed(modeladmin, request, queryset)
+
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == ["burim@example.com"]
+    assert "confirmed" in mail.outbox[0].subject.lower()
+
+
+@pytest.mark.django_db
+def test_mark_as_cancelled_sends_status_email():
+    order = Order.objects.create(
+        sender_name="Burim",
+        sender_email="burim@example.com",
+        recipient_name="Sara",
+        delivery_address="Main street 10",
+        total_amount="100.00",
+        status=Order.Status.PENDING,
+    )
+
+    modeladmin = OrderAdmin(Order, AdminSite())
+    request = RequestFactory().get("/admin/")
+    request = attach_messages_middleware(request)
+    request.user = get_user_model().objects.create_superuser(
+        username="admin6",
+        email="admin6@example.com",
+        password="testpass123",
+    )
+
+    queryset = Order.objects.filter(id=order.id)
+    mark_as_cancelled(modeladmin, request, queryset)
+
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == ["burim@example.com"]
+    assert "cancelled" in mail.outbox[0].subject.lower()
