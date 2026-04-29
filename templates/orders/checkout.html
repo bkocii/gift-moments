@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout | Gift Moments{% endblock %}
+
+{% block content %}
+<section class="cart-page">
+    <div class="section-header">
+        <span class="eyebrow">Final step</span>
+        <h2>Checkout</h2>
+        <p>Enter sender and delivery details to place the order.</p>
+    </div>
+
+    <div class="cart-layout">
+        <div class="cart-items">
+            <form method="post" class="cart-card gift-form" novalidate>
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="{{ form.sender_name.id_for_label }}">Sender name</label>
+                        {{ form.sender_name }}
+                        {% if form.sender_name.errors %}
+                            <div class="field-error">{{ form.sender_name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-field">
+                        <label for="{{ form.sender_email.id_for_label }}">Sender email</label>
+                        {{ form.sender_email }}
+                        {% if form.sender_email.errors %}
+                            <div class="field-error">{{ form.sender_email.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-field">
+                        <label for="{{ form.sender_phone.id_for_label }}">Sender phone</label>
+                        {{ form.sender_phone }}
+                        {% if form.sender_phone.errors %}
+                            <div class="field-error">{{ form.sender_phone.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-field">
+                        <label for="{{ form.recipient_phone.id_for_label }}">Recipient phone</label>
+                        {{ form.recipient_phone }}
+                        {% if form.recipient_phone.errors %}
+                            <div class="field-error">{{ form.recipient_phone.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.recipient_name.id_for_label }}">Recipient name</label>
+                    {{ form.recipient_name }}
+                    {% if form.recipient_name.errors %}
+                        <div class="field-error">{{ form.recipient_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.delivery_address.id_for_label }}">Delivery address</label>
+                    {{ form.delivery_address }}
+                    {% if form.delivery_address.errors %}
+                        <div class="field-error">{{ form.delivery_address.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.delivery_notes.id_for_label }}">Delivery notes</label>
+                    {{ form.delivery_notes }}
+                    {% if form.delivery_notes.errors %}
+                        <div class="field-error">{{ form.delivery_notes.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Place order
+                </button>
+            </form>
+        </div>
+
+        <aside class="cart-summary">
+            <h3>Order summary</h3>
+
+            {% for item in cart_items %}
+                <div class="summary-row">
+                    <span>{{ item.name }} × {{ item.quantity }}</span>
+                    <strong>€{{ item.line_total }}</strong>
+                </div>
+            {% endfor %}
+
+            <div class="summary-row total">
+                <span>Total</span>
+                <strong>€{{ cart_total }}</strong>
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

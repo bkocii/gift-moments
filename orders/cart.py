@@ -26,6 +26,11 @@ def remove_from_cart(session, index):
         save_cart(session, cart_items)
 
 
+def clear_cart(session):
+    session[CART_SESSION_KEY] = []
+    session.modified = True
+
+
 def cart_item_count(session):
     return len(get_cart(session))
 

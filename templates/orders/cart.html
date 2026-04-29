@@ -90,7 +90,9 @@
                     <strong>€{{ cart_total }}</strong>
                 </div>
 
-                <a href="#" class="btn btn-primary summary-btn">Checkout next</a>
+                <a href="{% url 'orders:checkout' %}" class="btn btn-primary summary-btn">
+                    Continue to checkout
+                </a>
             </aside>
         </div>
     {% else %}

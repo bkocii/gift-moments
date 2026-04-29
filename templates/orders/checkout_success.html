@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Order placed | Gift Moments{% endblock %}
+
+{% block content %}
+<section class="cart-page">
+    <div class="empty-state">
+        <h3>Order placed successfully</h3>
+        <p>Your order reference is #{{ order.id }}.</p>
+        <p><strong>Total:</strong> €{{ order.total_amount }}</p>
+
+        <div class="selected-options-preview">
+            <h3>Ordered items</h3>
+            <ul>
+                {% for item in order.items.all %}
+                    <li>
+                        <strong>{{ item.gift_box_name }}</strong>
+                        × {{ item.quantity }} — €{{ item.line_total }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <a href="{% url 'home' %}" class="btn btn-secondary">Back to home</a>
+    </div>
+</section>
+{% endblock %}
