@@ -3,7 +3,13 @@ from decimal import Decimal
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
-from orders.cart import cart_total, clear_cart, get_cart, remove_from_cart
+from orders.cart import (
+    cart_total,
+    clear_cart,
+    get_cart,
+    remove_from_cart,
+    update_cart_item_quantity,
+)
 from orders.forms import CheckoutForm
 from orders.models import Order, OrderItem
 
@@ -17,6 +23,7 @@ def cart_detail(request):
         {
             "cart_items": cart_items,
             "cart_total": cart_total(request.session),
+            "cart_item_count": sum(int(item.get("quantity", 0)) for item in cart_items),
         },
     )
 
@@ -25,6 +32,19 @@ def cart_remove(request, index):
     if request.method == "POST":
         remove_from_cart(request.session, index)
         messages.success(request, "Item removed from cart.")
+
+    return redirect("orders:cart")
+
+
+def cart_update(request, index):
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+        except (TypeError, ValueError):
+            quantity = 1
+
+        update_cart_item_quantity(request.session, index, quantity)
+        messages.success(request, "Cart updated successfully.")
 
     return redirect("orders:cart")
 

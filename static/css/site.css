@@ -938,3 +938,25 @@ a {
     margin-top: 6px;
 }
 
+.cart-quantity-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.cart-qty-input {
+    width: 90px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font: inherit;
+    background: #fffdfc;
+}
+
+.cart-update-btn {
+    min-height: 42px;
+    padding: 0 16px;
+}
+

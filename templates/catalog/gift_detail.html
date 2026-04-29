@@ -94,23 +94,34 @@
                         {% endif %}
                     </div>
 
-                    {% for item in option_group_fields %}
+                    {% if option_group_fields %}
+                        {% for item in option_group_fields %}
+                            <div class="option-group">
+                                <div class="option-group-head">
+                                    <h3>{{ item.group.name }}</h3>
+                                    {% if item.group.is_required %}
+                                        <span class="required-badge">Required</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="option-group-body">
+                                    {{ item.field }}
+                                    {% if item.field.errors %}
+                                        <div class="field-error">{{ item.field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
                         <div class="option-group">
                             <div class="option-group-head">
-                                <h3>{{ item.group.name }}</h3>
-                                {% if item.group.is_required %}
-                                    <span class="required-badge">Required</span>
-                                {% endif %}
+                                <h3>Customization</h3>
                             </div>
-
                             <div class="option-group-body">
-                                {{ item.field }}
-                                {% if item.field.errors %}
-                                    <div class="field-error">{{ item.field.errors }}</div>
-                                {% endif %}
+                                <p>No additional options for this gift box.</p>
                             </div>
                         </div>
-                    {% endfor %}
+                    {% endif %}
 
                     <button type="submit" class="btn btn-primary">
                         Add to cart

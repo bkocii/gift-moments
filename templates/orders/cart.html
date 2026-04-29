@@ -29,10 +29,29 @@
 
                         <div class="cart-meta">
                             <p><strong>Delivery date:</strong> {{ item.delivery_date }}</p>
-                            <p><strong>Quantity:</strong> {{ item.quantity }}</p>
                             <p><strong>Unit price:</strong> €{{ item.unit_price }}</p>
                             <p><strong>Line total:</strong> €{{ item.line_total }}</p>
                         </div>
+
+                        <form
+                            method="post"
+                            action="{% url 'orders:cart_update' forloop.counter0 %}"
+                            class="cart-quantity-form"
+                        >
+                            {% csrf_token %}
+                            <label for="quantity-{{ forloop.counter0 }}"><strong>Quantity:</strong></label>
+                            <input
+                                id="quantity-{{ forloop.counter0 }}"
+                                type="number"
+                                name="quantity"
+                                min="1"
+                                value="{{ item.quantity }}"
+                                class="cart-qty-input"
+                            >
+                            <button type="submit" class="btn btn-secondary cart-update-btn">
+                                Update
+                            </button>
+                        </form>
 
                         {% if item.gift_message %}
                             <div class="cart-message-box">
@@ -83,7 +102,7 @@
                 <h3>Order summary</h3>
                 <div class="summary-row">
                     <span>Items</span>
-                    <strong>{{ cart_items|length }}</strong>
+                    <strong>{{ cart_item_count }}</strong>
                 </div>
                 <div class="summary-row total">
                     <span>Total</span>

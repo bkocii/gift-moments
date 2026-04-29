@@ -125,3 +125,116 @@ def test_cart_remove_deletes_item(client):
 
     cart_response = client.get(reverse("orders:cart"))
     assert b"Romantic Evening Box" not in cart_response.content
+
+
+@pytest.mark.django_db
+def test_adding_identical_customized_gift_merges_cart_item(client):
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses and wine.",
+        base_price="49.90",
+        is_active=True,
+    )
+    group = GiftOptionGroup.objects.create(
+        gift_box=gift_box,
+        name="Flower color",
+        slug="flower-color",
+        input_type=GiftOptionGroup.InputType.RADIO,
+        is_required=True,
+    )
+    option = GiftOption.objects.create(
+        group=group,
+        name="Premium mix",
+        slug="premium-mix",
+        price_delta="8.00",
+    )
+
+    post_data = {
+        "recipient_name": "Sara",
+        "delivery_date": "2026-05-10",
+        "gift_message": "Happy birthday!",
+        "quantity": 1,
+        "flower-color": str(option.id),
+    }
+
+    client.post(
+        reverse("catalog:gift_detail", kwargs={"slug": gift_box.slug}), data=post_data
+    )
+    client.post(
+        reverse("catalog:gift_detail", kwargs={"slug": gift_box.slug}), data=post_data
+    )
+
+    session = client.session
+    cart_items = session.get("cart_items", [])
+
+    assert len(cart_items) == 1
+    assert cart_items[0]["quantity"] == 2
+    assert cart_items[0]["line_total"] == "115.80"
+
+
+@pytest.mark.django_db
+def test_updating_cart_quantity_recalculates_line_total(client):
+    session = client.session
+    session["cart_items"] = [
+        {
+            "gift_box_id": 1,
+            "name": "Romantic Evening Box",
+            "slug": "romantic-evening-box",
+            "base_price": "49.90",
+            "unit_price": "57.90",
+            "line_total": "57.90",
+            "quantity": 1,
+            "recipient_name": "Sara",
+            "gift_message": "Happy birthday!",
+            "delivery_date": "2026-05-10",
+            "selected_options": [],
+        }
+    ]
+    session.save()
+
+    response = client.post(
+        reverse("orders:cart_update", kwargs={"index": 0}),
+        data={"quantity": 3},
+    )
+
+    assert response.status_code == 302
+    assert response.url == reverse("orders:cart")
+
+    updated_session = client.session
+    cart_items = updated_session.get("cart_items", [])
+
+    assert cart_items[0]["quantity"] == 3
+    assert cart_items[0]["line_total"] == "173.70"
+
+
+@pytest.mark.django_db
+def test_updating_cart_quantity_to_zero_removes_item(client):
+    session = client.session
+    session["cart_items"] = [
+        {
+            "gift_box_id": 1,
+            "name": "Romantic Evening Box",
+            "slug": "romantic-evening-box",
+            "base_price": "49.90",
+            "unit_price": "57.90",
+            "line_total": "57.90",
+            "quantity": 1,
+            "recipient_name": "Sara",
+            "gift_message": "Happy birthday!",
+            "delivery_date": "2026-05-10",
+            "selected_options": [],
+        }
+    ]
+    session.save()
+
+    response = client.post(
+        reverse("orders:cart_update", kwargs={"index": 0}),
+        data={"quantity": 0},
+    )
+
+    assert response.status_code == 302
+    assert response.url == reverse("orders:cart")
+
+    updated_session = client.session
+    assert updated_session.get("cart_items", []) == []
