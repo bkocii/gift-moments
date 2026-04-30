@@ -3,55 +3,93 @@
 {% block title %}{{ gift_box.name }} | Gift Moments{% endblock %}
 
 {% block content %}
-<section class="detail-page">
-    <div class="detail-card">
-        <div class="detail-image">
-            {% if gift_box.image %}
-                <img src="{{ gift_box.image.url }}" alt="{{ gift_box.name }}">
-            {% else %}
-                <div class="image-placeholder">
-                    <span>🎁</span>
+<section class="detail-page detail-page-v2">
+    <div class="detail-card detail-card-v2">
+        <div class="detail-media-panel">
+            <div class="detail-image detail-image-v2">
+                {% if main_image_url %}
+                    <img src="{{ main_image_url }}" alt="{{ main_image_alt }}">
+                {% else %}
+                    <div class="image-placeholder image-placeholder-v2">
+                        <span>🎁</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if gift_box.image or gallery_images %}
+                <div class="detail-thumb-row">
+                    {% if gift_box.image %}
+                        <div class="detail-thumb detail-thumb-active">
+                            <img src="{{ gift_box.image.url }}" alt="{{ gift_box.name }}">
+                        </div>
+                    {% endif %}
+
+                    {% for photo in gallery_images %}
+                        <div class="detail-thumb">
+                            <img
+                                src="{{ photo.image.url }}"
+                                alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
+                            >
+                        </div>
+                    {% endfor %}
                 </div>
             {% endif %}
+
+            <div class="detail-image-note">
+                <span>Beautifully wrapped and ready to gift</span>
+            </div>
         </div>
 
-        <div class="detail-content">
+        <div class="detail-content detail-content-v2">
             <span class="eyebrow">Curated gift box</span>
             <h1>{{ gift_box.name }}</h1>
-            <p>{{ gift_box.short_description }}</p>
+            <p class="detail-lead">{{ gift_box.short_description }}</p>
+
+            <div class="detail-price-line">
+                <strong>From €{{ gift_box.base_price }}</strong>
+                <span>Premium presentation included</span>
+            </div>
 
             {% if gift_box.description %}
-                <div class="description">
+                <div class="description description-v2">
                     {{ gift_box.description|linebreaks }}
                 </div>
             {% endif %}
 
-            <div class="included-box">
-                <h2>Included</h2>
+            <div class="detail-info-grid">
+                <div class="included-box included-box-v2">
+                    <div class="section-mini-head">
+                        <h2>Included</h2>
+                        <span>In this gift box</span>
+                    </div>
 
-                {% if gift_box.box_items.exists %}
-                    <ul>
-                        {% for box_item in gift_box.box_items.all %}
-                            <li>
-                                {% if box_item.quantity %}
-                                    <strong>{{ box_item.quantity }}</strong>
-                                {% endif %}
-                                {{ box_item.item.name }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p>Included items will be listed soon.</p>
-                {% endif %}
+                    {% if gift_box.box_items.exists %}
+                        <ul>
+                            {% for box_item in gift_box.box_items.all %}
+                                <li>
+                                    {% if box_item.quantity %}
+                                        <strong>{{ box_item.quantity }}</strong>
+                                    {% endif %}
+                                    {{ box_item.item.name }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>Included items will be listed soon.</p>
+                    {% endif %}
+                </div>
             </div>
 
-            <div class="customization-box">
-                <div class="customization-head">
-                    <h2>Customize your gift</h2>
+            <div class="customization-box customization-box-v2">
+                <div class="customization-head customization-head-v2">
+                    <div>
+                        <h2>Customize your gift</h2>
+                        <p>Choose options, add a message, then add this gift to your cart.</p>
+                    </div>
                     <strong>From €{{ gift_box.base_price }}</strong>
                 </div>
 
-                <form method="post" novalidate class="gift-form">
+                <form method="post" novalidate class="gift-form gift-form-v2">
                     {% csrf_token %}
 
                     {% if form.non_field_errors %}
@@ -60,7 +98,7 @@
                         </div>
                     {% endif %}
 
-                    <div class="form-grid">
+                    <div class="form-grid form-grid-v2">
                         <div class="form-field">
                             <label for="{{ form.recipient_name.id_for_label }}">Recipient name</label>
                             {{ form.recipient_name }}
@@ -95,37 +133,49 @@
                     </div>
 
                     {% if option_group_fields %}
-                        {% for item in option_group_fields %}
-                            <div class="option-group">
-                                <div class="option-group-head">
-                                    <h3>{{ item.group.name }}</h3>
-                                    {% if item.group.is_required %}
-                                        <span class="required-badge">Required</span>
-                                    {% endif %}
-                                </div>
+                        <div class="option-groups-stack">
+                            {% for item in option_group_fields %}
+                                <div class="option-group option-group-v2">
+                                    <div class="option-group-head option-group-head-v2">
+                                        <div>
+                                            <h3>{{ item.group.name }}</h3>
+                                            <span>Choose your preferred option</span>
+                                        </div>
 
-                                <div class="option-group-body">
-                                    {{ item.field }}
-                                    {% if item.field.errors %}
-                                        <div class="field-error">{{ item.field.errors }}</div>
-                                    {% endif %}
+                                        {% if item.group.is_required %}
+                                            <span class="required-badge">Required</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="option-group-body option-group-body-v2">
+                                        {{ item.field }}
+                                        {% if item.field.errors %}
+                                            <div class="field-error">{{ item.field.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="option-group option-group-v2">
+                            <div class="option-group-head option-group-head-v2">
+                                <div>
+                                    <h3>Customization</h3>
+                                    <span>Simple order setup</span>
                                 </div>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="option-group">
-                            <div class="option-group-head">
-                                <h3>Customization</h3>
-                            </div>
-                            <div class="option-group-body">
+                            <div class="option-group-body option-group-body-v2">
                                 <p>No additional options for this gift box.</p>
                             </div>
                         </div>
                     {% endif %}
 
-                    <button type="submit" class="btn btn-primary">
-                        Add to cart
-                    </button>
+                    <div class="detail-submit-row">
+                        <button type="submit" class="btn btn-primary btn-detail-primary">
+                            Add to cart
+                        </button>
+                        <span class="detail-submit-note">You can review everything before checkout.</span>
+                    </div>
                 </form>
             </div>
         </div>

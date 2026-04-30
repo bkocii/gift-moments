@@ -13,6 +13,7 @@ def gift_detail(request, slug):
             "box_items__item",
             "occasions",
             "option_groups__options",
+            "gallery_images",
         ),
         slug=slug,
         is_active=True,
@@ -148,6 +149,18 @@ def gift_detail(request, slug):
             "delivery_date": form.cleaned_data["delivery_date"],
         }
 
+    gallery_images = gift_box.gallery_images.filter(is_active=True).order_by(
+        "sort_order", "id"
+    )
+
+    main_image_url = gift_box.image.url if gift_box.image else None
+    main_image_alt = gift_box.name
+
+    if not main_image_url and gallery_images:
+        first_gallery_image = gallery_images[0]
+        main_image_url = first_gallery_image.image.url
+        main_image_alt = first_gallery_image.alt_text or gift_box.name
+
     return render(
         request,
         "catalog/gift_detail.html",
@@ -155,6 +168,8 @@ def gift_detail(request, slug):
             "gift_box": gift_box,
             "form": form,
             "option_group_fields": option_group_fields,
-            "submitted_data": submitted_data,
+            "gallery_images": gallery_images,
+            "main_image_url": main_image_url,
+            "main_image_alt": main_image_alt,
         },
     )

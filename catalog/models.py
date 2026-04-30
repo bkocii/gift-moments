@@ -140,3 +140,21 @@ class GiftOption(models.Model):
         if self.price_delta:
             return f"{self.name} (+€{self.price_delta})"
         return self.name
+
+
+class GiftBoxImage(models.Model):
+    gift_box = models.ForeignKey(
+        GiftBox,
+        on_delete=models.CASCADE,
+        related_name="gallery_images",
+    )
+    image = models.ImageField(upload_to="gift_boxes/gallery/")
+    alt_text = models.CharField(max_length=160, blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.gift_box.name} image {self.pk}"

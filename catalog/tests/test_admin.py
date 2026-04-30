@@ -3,6 +3,7 @@ from django.contrib.admin.sites import site
 
 from catalog.models import (
     GiftBox,
+    GiftBoxImage,
     GiftItem,
     GiftOptionGroup,
     Occasion,

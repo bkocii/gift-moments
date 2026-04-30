@@ -2,6 +2,7 @@ import pytest
 
 from catalog.models import (
     GiftBox,
+    GiftBoxImage,
     GiftBoxItem,
     GiftItem,
     GiftOption,
@@ -125,3 +126,20 @@ def test_gift_option_string_with_price_delta():
     )
 
     assert str(option) == "Premium red wine (+€12.50)"
+
+
+@pytest.mark.django_db
+def test_gift_box_image_string_representation():
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses and wine.",
+        base_price="49.90",
+    )
+
+    image = GiftBoxImage.objects.create(
+        gift_box=gift_box,
+        image="gift_boxes/gallery/test.jpg",
+    )
+
+    assert str(image) == f"Romantic Evening Box image {image.pk}"

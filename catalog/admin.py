@@ -3,6 +3,7 @@ from django.contrib import admin
 from catalog.models import (
     GiftBox,
     GiftBoxItem,
+    GiftBoxImage,
     GiftItem,
     GiftOption,
     GiftOptionGroup,
@@ -39,6 +40,12 @@ class GiftOptionInline(admin.TabularInline):
     prepopulated_fields = {"slug": ("name",)}
 
 
+class GiftBoxImageInline(admin.TabularInline):
+    model = GiftBoxImage
+    extra = 1
+    fields = ("image", "alt_text", "sort_order", "is_active")
+
+
 @admin.register(GiftOptionGroup)
 class GiftOptionGroupAdmin(admin.ModelAdmin):
     list_display = (
@@ -71,5 +78,5 @@ class GiftBoxAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     autocomplete_fields = ("occasions",)
     filter_horizontal = ("occasions",)
-    inlines = [GiftBoxItemInline]
+    inlines = [GiftBoxItemInline, GiftBoxImageInline]
     ordering = ("sort_order", "name")
