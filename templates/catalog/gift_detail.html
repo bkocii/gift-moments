@@ -8,7 +8,11 @@
         <div class="detail-media-panel">
             <div class="detail-image detail-image-v2">
                 {% if main_image_url %}
-                    <img src="{{ main_image_url }}" alt="{{ main_image_alt }}">
+                    <img
+                        id="main-product-image"
+                        src="{{ main_image_url }}"
+                        alt="{{ main_image_alt }}"
+                    >
                 {% else %}
                     <div class="image-placeholder image-placeholder-v2">
                         <span>🎁</span>
@@ -19,18 +23,30 @@
             {% if gift_box.image or gallery_images %}
                 <div class="detail-thumb-row">
                     {% if gift_box.image %}
-                        <div class="detail-thumb detail-thumb-active">
+                        <button
+                            type="button"
+                            class="detail-thumb detail-thumb-button detail-thumb-active"
+                            data-image-url="{{ gift_box.image.url }}"
+                            data-image-alt="{{ gift_box.name }}"
+                            aria-label="Show main image"
+                        >
                             <img src="{{ gift_box.image.url }}" alt="{{ gift_box.name }}">
-                        </div>
+                        </button>
                     {% endif %}
 
                     {% for photo in gallery_images %}
-                        <div class="detail-thumb">
+                        <button
+                            type="button"
+                            class="detail-thumb detail-thumb-button {% if not gift_box.image and forloop.first %}detail-thumb-active{% endif %}"
+                            data-image-url="{{ photo.image.url }}"
+                            data-image-alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
+                            aria-label="Show gallery image {{ forloop.counter }}"
+                        >
                             <img
                                 src="{{ photo.image.url }}"
                                 alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
                             >
-                        </div>
+                        </button>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -181,4 +197,32 @@
         </div>
     </div>
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const mainImage = document.getElementById("main-product-image");
+        const thumbs = document.querySelectorAll(".detail-thumb-button");
+
+        if (!mainImage || !thumbs.length) {
+            return;
+        }
+
+        thumbs.forEach((thumb) => {
+            thumb.addEventListener("click", function () {
+                const imageUrl = thumb.dataset.imageUrl;
+                const imageAlt = thumb.dataset.imageAlt || "";
+
+                mainImage.src = imageUrl;
+                mainImage.alt = imageAlt;
+
+                thumbs.forEach((item) => {
+                    item.classList.remove("detail-thumb-active");
+                });
+
+                thumb.classList.add("detail-thumb-active");
+            });
+        });
+    });
+</script>
+
 {% endblock %}
