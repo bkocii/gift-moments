@@ -6,6 +6,7 @@ class Occasion(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="occasions/", blank=True, null=True)
     is_active = models.BooleanField(default=True)
     sort_order = models.PositiveIntegerField(default=0)
 

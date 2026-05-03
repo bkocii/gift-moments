@@ -9,20 +9,26 @@
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
 </head>
 <body>
-    <header class="site-header">
-        <a href="{% url 'home' %}" class="brand">
-            <span class="brand-icon">🎁</span>
-            <span>
-                <strong>Gift Moments</strong>
-                <small>Curated with love</small>
-            </span>
-        </a>
+    <header class="site-header site-header-v2">
+        <div class="site-header-inner">
+            <a href="{% url 'home' %}" class="brand brand-v2">
+                <span class="brand-icon brand-icon-v2">🎁</span>
+                <span class="brand-copy">
+                    <strong>Gift Moments</strong>
+                    <small>Curated with love</small>
+                </span>
+            </a>
 
-        <nav class="site-nav">
+            <a href="{% url 'orders:cart' %}" class="cart-pill cart-pill-desktop">
+                Cart{% if cart_item_count %} <span>({{ cart_item_count }})</span>{% endif %}
+            </a>
+        </div>
+
+        <nav class="site-nav site-nav-v2">
             <a href="{% url 'home' %}#gift-boxes">Gift Boxes</a>
             <a href="{% url 'home' %}#gift-boxes">Occasions</a>
-            <a href="{% url 'orders:cart' %}">
-                Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}
+            <a href="{% url 'orders:cart' %}" class="cart-pill cart-pill-mobile">
+                Cart{% if cart_item_count %} <span>({{ cart_item_count }})</span>{% endif %}
             </a>
         </nav>
     </header>

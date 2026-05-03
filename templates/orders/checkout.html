@@ -12,7 +12,7 @@
 
     <div class="cart-layout">
         <div class="cart-items">
-            <form method="post" class="cart-card gift-form" novalidate>
+            <form method="post" class="cart-card gift-form" novalidate id="checkout-form">
                 {% csrf_token %}
 
                 <div class="form-grid">
@@ -72,10 +72,6 @@
                         <div class="field-error">{{ form.delivery_notes.errors }}</div>
                     {% endif %}
                 </div>
-
-                <button type="submit" class="btn btn-primary">
-                    Place order
-                </button>
             </form>
         </div>
 
@@ -124,6 +120,10 @@
                 <span>Total</span>
                 <strong>€{{ cart_total }}</strong>
             </div>
+
+            <button type="submit" form="checkout-form" class="btn btn-primary summary-btn">
+                Place order
+            </button>
         </aside>
     </div>
 </section>

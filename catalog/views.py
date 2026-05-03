@@ -171,5 +171,6 @@ def gift_detail(request, slug):
             "gallery_images": gallery_images,
             "main_image_url": main_image_url,
             "main_image_alt": main_image_alt,
+            "submitted_data": submitted_data,
         },
     )

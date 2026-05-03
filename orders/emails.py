@@ -4,7 +4,7 @@ from django.utils.html import strip_tags
 
 
 def send_order_confirmation_email(order):
-    subject = f"Your Gift Moments order #{order.id}"
+    subject = f"Gift Moments — Order #{order.id} received"
 
     html_message = render_to_string(
         "orders/emails/order_confirmation.html",

@@ -2,8 +2,8 @@ from django.contrib import admin
 
 from catalog.models import (
     GiftBox,
-    GiftBoxItem,
     GiftBoxImage,
+    GiftBoxItem,
     GiftItem,
     GiftOption,
     GiftOptionGroup,
@@ -13,7 +13,7 @@ from catalog.models import (
 
 @admin.register(Occasion)
 class OccasionAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "is_active", "sort_order")
+    list_display = ("name", "slug", "image", "is_active", "sort_order")
     list_filter = ("is_active",)
     search_fields = ("name", "description")
     prepopulated_fields = {"slug": ("name",)}

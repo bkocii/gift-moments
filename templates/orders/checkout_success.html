@@ -7,6 +7,7 @@
     <div class="section-header">
         <span class="eyebrow">Thank you</span>
         <h2>Order placed successfully</h2>
+
         {% if order.status == "pending" %}
             <p>Your order has been received and is awaiting confirmation.</p>
         {% elif order.status == "confirmed" %}
@@ -90,10 +91,10 @@
         </div>
 
         <aside class="cart-summary">
-            <h3>Next steps</h3>
+            <h3>Order summary</h3>
 
             <div class="summary-row">
-                <span>Order status</span>
+                <span>Status</span>
                 <strong>{{ order.get_status_display }}</strong>
             </div>
 

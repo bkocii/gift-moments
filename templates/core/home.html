@@ -40,7 +40,7 @@
                 href="{% url 'home' %}#gift-boxes"
                 class="occasion-pill occasion-pill-v2 {% if not selected_occasion %}active{% endif %}"
             >
-                All gifts
+                <span class="occasion-pill-label">All gifts</span>
             </a>
 
             {% for occasion in occasions %}
@@ -48,7 +48,12 @@
                     href="{% url 'home' %}?occasion={{ occasion.slug }}#gift-boxes"
                     class="occasion-pill occasion-pill-v2 {% if selected_occasion.slug == occasion.slug %}active{% endif %}"
                 >
-                    {{ occasion.name }}
+                    {% if occasion.image %}
+                        <span class="occasion-pill-media">
+                            <img src="{{ occasion.image.url }}" alt="{{ occasion.name }}">
+                        </span>
+                    {% endif %}
+                    <span class="occasion-pill-label">{{ occasion.name }}</span>
                 </a>
             {% empty %}
                 <p>No occasions added yet.</p>

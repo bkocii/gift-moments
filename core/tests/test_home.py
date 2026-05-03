@@ -110,3 +110,20 @@ def test_home_page_invalid_occasion_slug_falls_back_to_all_gifts(client):
 
     assert response.status_code == 200
     assert b"Visible Gift Box" in response.content
+
+
+@pytest.mark.django_db
+def test_home_page_shows_occasion_image_when_present(client):
+    from catalog.models import Occasion
+
+    Occasion.objects.create(
+        name="Birthday",
+        slug="birthday",
+        image="occasions/birthday.jpg",
+        is_active=True,
+    )
+
+    response = client.get(reverse("home"))
+
+    assert response.status_code == 200
+    assert b"occasions/birthday.jpg" in response.content

@@ -143,3 +143,14 @@ def test_gift_box_image_string_representation():
     )
 
     assert str(image) == f"Romantic Evening Box image {image.pk}"
+
+
+@pytest.mark.django_db
+def test_occasion_can_store_image():
+    occasion = Occasion.objects.create(
+        name="Birthday",
+        slug="birthday",
+        image="occasions/birthday.jpg",
+    )
+
+    assert occasion.image.name == "occasions/birthday.jpg"
