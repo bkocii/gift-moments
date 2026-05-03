@@ -5,7 +5,17 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from PIL import Image
 
-from catalog.models import GiftBox, GiftBoxImage, GiftOption, GiftOptionGroup
+from catalog.models import (
+    BuildCategory,
+    BuildOption,
+    BuildYourOwnPackage,
+    GiftBox,
+    GiftBoxImage,
+    GiftOption,
+    GiftOptionGroup,
+    MessageCategory,
+    MessageTemplate,
+)
 
 
 def make_test_image(name="test.png", size=(1200, 900), color=(255, 0, 0)):
@@ -333,3 +343,52 @@ def test_gift_detail_uses_primary_gallery_image_as_main_image(client):
     assert response.status_code == 200
     assert primary_image.image.url.encode() in response.content
     assert b"Primary gallery photo" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_loads(client):
+    response = client.get(reverse("catalog:build_your_own"))
+
+    assert response.status_code == 200
+    assert b"Build Your Own Gift" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_shows_packages_categories_and_messages(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+    category = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        is_active=True,
+    )
+    BuildOption.objects.create(
+        category=category,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+        is_active=True,
+    )
+    message_category = MessageCategory.objects.create(
+        name="Birthday",
+        slug="birthday",
+        is_active=True,
+    )
+    MessageTemplate.objects.create(
+        category=message_category,
+        title="Warm Birthday Wish",
+        text="Wishing you joy and happiness.",
+        is_active=True,
+    )
+
+    response = client.get(reverse("catalog:build_your_own"))
+
+    assert response.status_code == 200
+    assert package.name.encode() in response.content
+    assert category.name.encode() in response.content
+    assert b"Red Roses" in response.content
+    assert b"Warm Birthday Wish" in response.content

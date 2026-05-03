@@ -3,7 +3,13 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
 from catalog.forms import GiftCustomizationForm
-from catalog.models import GiftBox, GiftOptionGroup
+from catalog.models import (
+    BuildCategory,
+    BuildYourOwnPackage,
+    GiftBox,
+    GiftOptionGroup,
+    MessageCategory,
+)
 from orders.cart import add_to_cart
 
 
@@ -181,5 +187,33 @@ def gift_detail(request, slug):
             "main_image_alt": main_image_alt,
             "primary_gallery_image": primary_gallery_image,
             "submitted_data": submitted_data,
+        },
+    )
+
+
+def build_your_own(request):
+    packages = BuildYourOwnPackage.objects.filter(is_active=True).order_by(
+        "sort_order", "name"
+    )
+
+    categories = (
+        BuildCategory.objects.filter(is_active=True)
+        .prefetch_related("options")
+        .order_by("sort_order", "name")
+    )
+
+    message_categories = (
+        MessageCategory.objects.filter(is_active=True)
+        .prefetch_related("templates")
+        .order_by("sort_order", "name")
+    )
+
+    return render(
+        request,
+        "catalog/build_your_own.html",
+        {
+            "packages": packages,
+            "categories": categories,
+            "message_categories": message_categories,
         },
     )
