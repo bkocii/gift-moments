@@ -2,13 +2,19 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from catalog.models import (
+    BuildCategory,
+    BuildOption,
+    BuildYourOwnPackage,
     GiftBox,
     GiftBoxImage,
     GiftBoxItem,
     GiftItem,
     GiftOption,
     GiftOptionGroup,
+    MessageCategory,
+    MessageTemplate,
     Occasion,
+    PackageCategoryRule,
 )
 
 
@@ -165,3 +171,79 @@ class GiftBoxAdmin(admin.ModelAdmin):
         )
 
     preview_large.short_description = "Preview"
+
+
+class PackageCategoryRuleInline(admin.TabularInline):
+    model = PackageCategoryRule
+    extra = 1
+    autocomplete_fields = ("category",)
+
+
+@admin.register(BuildYourOwnPackage)
+class BuildYourOwnPackageAdmin(admin.ModelAdmin):
+    list_display = ("name", "base_price", "is_active", "sort_order")
+    list_filter = ("is_active",)
+    search_fields = ("name", "description")
+    prepopulated_fields = {"slug": ("name",)}
+    ordering = ("sort_order", "name")
+    inlines = [PackageCategoryRuleInline]
+
+
+class BuildOptionInline(admin.TabularInline):
+    model = BuildOption
+    extra = 1
+    prepopulated_fields = {"slug": ("name",)}
+
+
+@admin.register(BuildCategory)
+class BuildCategoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "selection_type",
+        "is_required",
+        "is_active",
+        "sort_order",
+    )
+    list_filter = ("selection_type", "is_required", "is_active")
+    search_fields = ("name", "description")
+    prepopulated_fields = {"slug": ("name",)}
+    ordering = ("sort_order", "name")
+    inlines = [BuildOptionInline]
+
+
+@admin.register(BuildOption)
+class BuildOptionAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "category",
+        "price_delta",
+        "is_active",
+        "sort_order",
+    )
+    list_filter = ("category", "is_active")
+    search_fields = ("name", "description", "category__name")
+    prepopulated_fields = {"slug": ("name",)}
+    ordering = ("category", "sort_order", "name")
+
+
+class MessageTemplateInline(admin.TabularInline):
+    model = MessageTemplate
+    extra = 1
+
+
+@admin.register(MessageCategory)
+class MessageCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_active", "sort_order")
+    list_filter = ("is_active",)
+    search_fields = ("name",)
+    prepopulated_fields = {"slug": ("name",)}
+    ordering = ("sort_order", "name")
+    inlines = [MessageTemplateInline]
+
+
+@admin.register(MessageTemplate)
+class MessageTemplateAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "is_active", "sort_order")
+    list_filter = ("category", "is_active")
+    search_fields = ("title", "text", "category__name")
+    ordering = ("category", "sort_order", "title")

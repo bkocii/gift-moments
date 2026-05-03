@@ -2,9 +2,12 @@ import pytest
 from django.contrib.admin.sites import site
 
 from catalog.models import (
+    BuildCategory,
+    BuildYourOwnPackage,
     GiftBox,
     GiftItem,
     GiftOptionGroup,
+    MessageCategory,
     Occasion,
 )
 
@@ -15,3 +18,6 @@ def test_catalog_models_registered_in_admin():
     assert GiftItem in site._registry
     assert GiftBox in site._registry
     assert GiftOptionGroup in site._registry
+    assert BuildYourOwnPackage in site._registry
+    assert BuildCategory in site._registry
+    assert MessageCategory in site._registry
