@@ -231,3 +231,125 @@ class GiftBoxImage(models.Model):
             type(self).objects.filter(gift_box=self.gift_box).exclude(
                 pk=self.pk
             ).update(is_primary=False)
+
+
+class BuildYourOwnPackage(models.Model):
+    name = models.CharField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=140, unique=True)
+    description = models.TextField(blank=True)
+    base_price = models.DecimalField(max_digits=8, decimal_places=2)
+    image = models.ImageField(
+        upload_to="build_your_own/packages/", blank=True, null=True
+    )
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class BuildCategory(models.Model):
+    class SelectionType(models.TextChoices):
+        SINGLE = "single", "Single select"
+        MULTIPLE = "multiple", "Multiple select"
+
+    name = models.CharField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=140, unique=True)
+    description = models.TextField(blank=True)
+    selection_type = models.CharField(
+        max_length=20,
+        choices=SelectionType.choices,
+        default=SelectionType.SINGLE,
+    )
+    is_required = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class BuildOption(models.Model):
+    category = models.ForeignKey(
+        BuildCategory,
+        on_delete=models.CASCADE,
+        related_name="options",
+    )
+    name = models.CharField(max_length=120)
+    slug = models.SlugField(max_length=140)
+    description = models.TextField(blank=True)
+    image = models.ImageField(
+        upload_to="build_your_own/options/", blank=True, null=True
+    )
+    price_delta = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        unique_together = ["category", "slug"]
+
+    def __str__(self):
+        if self.price_delta:
+            return f"{self.name} (+€{self.price_delta})"
+        return self.name
+
+
+class PackageCategoryRule(models.Model):
+    package = models.ForeignKey(
+        BuildYourOwnPackage,
+        on_delete=models.CASCADE,
+        related_name="category_rules",
+    )
+    category = models.ForeignKey(
+        BuildCategory,
+        on_delete=models.CASCADE,
+        related_name="package_rules",
+    )
+    is_enabled = models.BooleanField(default=True)
+    is_required_override = models.BooleanField(blank=True, null=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        unique_together = ["package", "category"]
+
+    def __str__(self):
+        return f"{self.package.name} - {self.category.name}"
+
+
+class MessageCategory(models.Model):
+    name = models.CharField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=140, unique=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class MessageTemplate(models.Model):
+    category = models.ForeignKey(
+        MessageCategory,
+        on_delete=models.CASCADE,
+        related_name="templates",
+    )
+    title = models.CharField(max_length=120)
+    text = models.TextField()
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "title"]
+
+    def __str__(self):
+        return f"{self.category.name} - {self.title}"

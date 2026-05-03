@@ -1,7 +1,19 @@
-import pytest
-from django.urls import reverse
+from io import BytesIO
 
-from catalog.models import GiftBox, Occasion
+import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
+from PIL import Image
+
+from catalog.models import GiftBox, GiftBoxImage, Occasion
+
+
+def make_test_image(name="test.png", size=(1200, 900), color=(255, 0, 0)):
+    file_obj = BytesIO()
+    image = Image.new("RGB", size, color)
+    image.save(file_obj, format="PNG")
+    file_obj.seek(0)
+    return SimpleUploadedFile(name, file_obj.read(), content_type="image/png")
 
 
 @pytest.mark.django_db
@@ -114,25 +126,21 @@ def test_home_page_invalid_occasion_slug_falls_back_to_all_gifts(client):
 
 @pytest.mark.django_db
 def test_home_page_shows_occasion_image_when_present(client):
-    from catalog.models import Occasion
-
     Occasion.objects.create(
         name="Birthday",
         slug="birthday",
-        image="occasions/birthday.jpg",
+        image=make_test_image("birthday.png"),
         is_active=True,
     )
 
     response = client.get(reverse("home"))
 
     assert response.status_code == 200
-    assert b"occasions/birthday.jpg" in response.content
+    assert b"occasions/" in response.content
 
 
 @pytest.mark.django_db
 def test_home_page_uses_primary_gallery_image_for_gift_card(client):
-    from catalog.models import GiftBox, GiftBoxImage
-
     gift_box = GiftBox.objects.create(
         name="Romantic Evening Box",
         slug="romantic-evening-box",
@@ -140,18 +148,18 @@ def test_home_page_uses_primary_gallery_image_for_gift_card(client):
         base_price="49.90",
         is_active=True,
         is_featured=True,
-        image="gift_boxes/main.jpg",
+        image=make_test_image("main.png"),
     )
 
     GiftBoxImage.objects.create(
         gift_box=gift_box,
-        image="gift_boxes/gallery/secondary.jpg",
+        image=make_test_image("secondary.png"),
         is_active=True,
         is_primary=False,
     )
-    GiftBoxImage.objects.create(
+    primary_image = GiftBoxImage.objects.create(
         gift_box=gift_box,
-        image="gift_boxes/gallery/primary.jpg",
+        image=make_test_image("primary.png"),
         alt_text="Primary homepage image",
         is_active=True,
         is_primary=True,
@@ -160,4 +168,4 @@ def test_home_page_uses_primary_gallery_image_for_gift_card(client):
     response = client.get(reverse("home"))
 
     assert response.status_code == 200
-    assert b"gift_boxes/gallery/primary.jpg" in response.content
+    assert primary_image.image.url.encode() in response.content

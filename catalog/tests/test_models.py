@@ -5,13 +5,19 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
 from catalog.models import (
+    BuildCategory,
+    BuildOption,
+    BuildYourOwnPackage,
     GiftBox,
     GiftBoxImage,
     GiftBoxItem,
     GiftItem,
     GiftOption,
     GiftOptionGroup,
+    MessageCategory,
+    MessageTemplate,
     Occasion,
+    PackageCategoryRule,
 )
 
 
@@ -151,7 +157,7 @@ def test_gift_box_image_string_representation():
 
     image = GiftBoxImage.objects.create(
         gift_box=gift_box,
-        image="gift_boxes/gallery/test.jpg",
+        image=make_test_image("gallery.png"),
     )
 
     assert str(image) == f"Romantic Evening Box image {image.pk}"
@@ -162,10 +168,11 @@ def test_occasion_can_store_image():
     occasion = Occasion.objects.create(
         name="Birthday",
         slug="birthday",
-        image="occasions/birthday.jpg",
+        image=make_test_image("birthday.png"),
     )
 
-    assert occasion.image.name == "occasions/birthday.jpg"
+    assert occasion.image.name.startswith("occasions/")
+    assert occasion.image.name.endswith(".jpg")
 
 
 @pytest.mark.django_db
@@ -179,12 +186,12 @@ def test_only_one_primary_gallery_image_per_gift_box():
 
     first_image = GiftBoxImage.objects.create(
         gift_box=gift_box,
-        image="gift_boxes/gallery/test1.jpg",
+        image=make_test_image("test1.png"),
         is_primary=True,
     )
     second_image = GiftBoxImage.objects.create(
         gift_box=gift_box,
-        image="gift_boxes/gallery/test2.jpg",
+        image=make_test_image("test2.png"),
         is_primary=True,
     )
 
@@ -217,3 +224,75 @@ def test_occasion_image_is_converted_to_jpg():
     )
 
     assert occasion.image.name.endswith(".jpg")
+
+
+@pytest.mark.django_db
+def test_build_your_own_package_string_representation():
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+    )
+
+    assert str(package) == "Premium Box"
+
+
+@pytest.mark.django_db
+def test_build_category_string_representation():
+    category = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        selection_type=BuildCategory.SelectionType.SINGLE,
+    )
+
+    assert str(category) == "Flowers"
+
+
+@pytest.mark.django_db
+def test_build_option_string_representation():
+    category = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+    )
+    option = BuildOption.objects.create(
+        category=category,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+    )
+
+    assert str(option) == "Red Roses (+€8.00)"
+
+
+@pytest.mark.django_db
+def test_package_category_rule_string_representation():
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+    )
+    category = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+    )
+    rule = PackageCategoryRule.objects.create(
+        package=package,
+        category=category,
+    )
+
+    assert str(rule) == "Premium Box - Flowers"
+
+
+@pytest.mark.django_db
+def test_message_template_string_representation():
+    category = MessageCategory.objects.create(
+        name="Birthday",
+        slug="birthday",
+    )
+    template = MessageTemplate.objects.create(
+        category=category,
+        title="Warm Birthday Wish",
+        text="Wishing you joy and happiness on your special day.",
+    )
+
+    assert str(template) == "Birthday - Warm Birthday Wish"

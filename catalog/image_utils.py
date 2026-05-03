@@ -15,6 +15,9 @@ def optimize_uploaded_image(
     if not image_field_file:
         return image_field_file
 
+    if not hasattr(image_field_file, "file"):
+        return image_field_file
+
     image_field_file.open()
     img = Image.open(image_field_file)
     img = ImageOps.exif_transpose(img)

@@ -1,7 +1,19 @@
+from io import BytesIO
+
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from PIL import Image
 
 from catalog.models import GiftBox, GiftBoxImage, GiftOption, GiftOptionGroup
+
+
+def make_test_image(name="test.png", size=(1200, 900), color=(255, 0, 0)):
+    file_obj = BytesIO()
+    image = Image.new("RGB", size, color)
+    image.save(file_obj, format="PNG")
+    file_obj.seek(0)
+    return SimpleUploadedFile(name, file_obj.read(), content_type="image/png")
 
 
 @pytest.mark.django_db
@@ -296,19 +308,19 @@ def test_gift_detail_uses_primary_gallery_image_as_main_image(client):
         short_description="Roses, chocolates and wine.",
         base_price="49.90",
         is_active=True,
-        image="gift_boxes/main.jpg",
+        image=make_test_image("main.png"),
     )
 
     GiftBoxImage.objects.create(
         gift_box=gift_box,
-        image="gift_boxes/gallery/test1.jpg",
+        image=make_test_image("test1.png"),
         alt_text="Gallery photo 1",
         is_active=True,
         is_primary=False,
     )
-    GiftBoxImage.objects.create(
+    primary_image = GiftBoxImage.objects.create(
         gift_box=gift_box,
-        image="gift_boxes/gallery/test2.jpg",
+        image=make_test_image("test2.png"),
         alt_text="Primary gallery photo",
         is_active=True,
         is_primary=True,
@@ -319,5 +331,5 @@ def test_gift_detail_uses_primary_gallery_image_as_main_image(client):
     )
 
     assert response.status_code == 200
-    assert b"gift_boxes/gallery/test2.jpg" in response.content
+    assert primary_image.image.url.encode() in response.content
     assert b"Primary gallery photo" in response.content
