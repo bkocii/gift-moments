@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
 
+from catalog.image_utils import optimize_uploaded_image
+
 
 class Occasion(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -15,6 +17,16 @@ class Occasion(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            self.image = optimize_uploaded_image(
+                self.image,
+                max_width=900,
+                max_height=900,
+                quality=80,
+            )
+        super().save(*args, **kwargs)
 
 
 class GiftItem(models.Model):
@@ -57,6 +69,16 @@ class GiftBox(models.Model):
 
     def get_absolute_url(self):
         return reverse("catalog:gift_detail", kwargs={"slug": self.slug})
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            self.image = optimize_uploaded_image(
+                self.image,
+                max_width=1600,
+                max_height=1600,
+                quality=82,
+            )
+        super().save(*args, **kwargs)
 
     @property
     def primary_gallery_image(self):
@@ -195,6 +217,14 @@ class GiftBoxImage(models.Model):
         return f"{self.gift_box.name} image {self.pk}"
 
     def save(self, *args, **kwargs):
+        if self.image:
+            self.image = optimize_uploaded_image(
+                self.image,
+                max_width=1600,
+                max_height=1600,
+                quality=82,
+            )
+
         super().save(*args, **kwargs)
 
         if self.is_primary:

@@ -1,4 +1,8 @@
+from io import BytesIO
+
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
 
 from catalog.models import (
     GiftBox,
@@ -9,6 +13,14 @@ from catalog.models import (
     GiftOptionGroup,
     Occasion,
 )
+
+
+def make_test_image(name="test.png", size=(2400, 1800), color=(255, 0, 0)):
+    file_obj = BytesIO()
+    image = Image.new("RGB", size, color)
+    image.save(file_obj, format="PNG")
+    file_obj.seek(0)
+    return SimpleUploadedFile(name, file_obj.read(), content_type="image/png")
 
 
 @pytest.mark.django_db
@@ -181,3 +193,27 @@ def test_only_one_primary_gallery_image_per_gift_box():
 
     assert first_image.is_primary is False
     assert second_image.is_primary is True
+
+
+@pytest.mark.django_db
+def test_gift_box_image_is_converted_to_jpg():
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses and wine.",
+        base_price="49.90",
+        image=make_test_image(),
+    )
+
+    assert gift_box.image.name.endswith(".jpg")
+
+
+@pytest.mark.django_db
+def test_occasion_image_is_converted_to_jpg():
+    occasion = Occasion.objects.create(
+        name="Birthday",
+        slug="birthday",
+        image=make_test_image("occasion.png"),
+    )
+
+    assert occasion.image.name.endswith(".jpg")
