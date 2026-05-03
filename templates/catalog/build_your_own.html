@@ -141,9 +141,22 @@
                 </section>
 
                 <div class="detail-submit-row">
-                    <button type="submit" class="btn btn-primary btn-detail-primary">
-                        Review selection
-                    </button>
+                    {% if submitted_data %}
+                        <div class="detail-submit-row">
+                            <button type="submit" name="add_to_cart" value="1" class="btn btn-primary btn-detail-primary">
+                                Add to cart
+                            </button>
+                            <button type="submit" class="btn btn-secondary">
+                                Update review
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="detail-submit-row">
+                            <button type="submit" class="btn btn-primary btn-detail-primary">
+                                Review selection
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
             </form>
         </div>

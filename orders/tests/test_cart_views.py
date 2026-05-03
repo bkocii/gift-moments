@@ -238,3 +238,44 @@ def test_updating_cart_quantity_to_zero_removes_item(client):
 
     updated_session = client.session
     assert updated_session.get("cart_items", []) == []
+
+
+@pytest.mark.django_db
+def test_cart_page_shows_build_your_own_item(client):
+    session = client.session
+    session["cart_items"] = [
+        {
+            "item_type": "build_your_own",
+            "package_id": 1,
+            "name": "Build Your Own - Premium Box",
+            "slug": "premium-box",
+            "base_price": "20.00",
+            "unit_price": "28.00",
+            "line_total": "28.00",
+            "quantity": 1,
+            "recipient_name": "Sara",
+            "gift_message": "Happy Birthday!",
+            "delivery_date": "2026-05-20",
+            "selected_options": [
+                {
+                    "group_name": "Flowers",
+                    "is_multiple": False,
+                    "option": {
+                        "name": "Red Roses",
+                        "price_delta": "8.00",
+                    },
+                }
+            ],
+            "message_mode": "custom",
+            "message_template_title": "",
+        }
+    ]
+    session.save()
+
+    response = client.get(reverse("orders:cart"))
+
+    assert response.status_code == 200
+    assert b"Build Your Own - Premium Box" in response.content
+    assert b"Custom built gift" in response.content
+    assert b"Red Roses" in response.content
+    assert b"28.00" in response.content

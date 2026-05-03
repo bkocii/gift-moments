@@ -260,3 +260,59 @@ def test_checkout_success_page_shows_item_details_and_selected_options(client):
     assert b"Premium mix" in response.content
     assert b"No wine" in response.content
     assert b"115.80" in response.content
+
+
+@pytest.mark.django_db
+def test_checkout_creates_order_item_from_build_your_own_cart_item(client):
+    session = client.session
+    session["cart_items"] = [
+        {
+            "item_type": "build_your_own",
+            "package_id": 1,
+            "name": "Build Your Own - Premium Box",
+            "slug": "premium-box",
+            "base_price": "20.00",
+            "unit_price": "28.00",
+            "line_total": "28.00",
+            "quantity": 1,
+            "recipient_name": "Sara",
+            "gift_message": "Happy Birthday!",
+            "delivery_date": "2026-05-20",
+            "selected_options": [
+                {
+                    "group_name": "Flowers",
+                    "is_multiple": False,
+                    "option": {
+                        "name": "Red Roses",
+                        "price_delta": "8.00",
+                    },
+                }
+            ],
+            "message_mode": "custom",
+            "message_template_title": "",
+        }
+    ]
+    session.save()
+
+    response = client.post(
+        reverse("orders:checkout"),
+        data={
+            "sender_name": "Burim",
+            "sender_email": "burim@example.com",
+            "sender_phone": "12345",
+            "recipient_name": "Sara",
+            "recipient_phone": "67890",
+            "delivery_address": "Main street 10",
+            "delivery_notes": "",
+        },
+    )
+
+    assert response.status_code == 302
+
+    item = OrderItem.objects.get()
+
+    assert item.gift_box_name == "Build Your Own - Premium Box"
+    assert item.gift_box_slug == "premium-box"
+    assert item.recipient_name == "Sara"
+    assert str(item.line_total) == "28.00"
+    assert item.selected_options[0]["group_name"] == "Flowers"

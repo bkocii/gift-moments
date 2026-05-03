@@ -89,6 +89,10 @@
                         <div><strong>For:</strong> {{ item.recipient_name }}</div>
                         <div><strong>Delivery:</strong> {{ item.delivery_date }}</div>
 
+                        {% if item.item_type == "build_your_own" %}
+                            <div><strong>Type:</strong> Custom built gift</div>
+                        {% endif %}
+
                         {% if item.selected_options %}
                             <div class="checkout-summary-options">
                                 {% for selected in item.selected_options %}

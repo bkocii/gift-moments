@@ -599,3 +599,50 @@ def test_build_your_own_page_uses_template_message_text_in_summary(client):
     assert b"Wishing you joy and happiness on your special day." in response.content
 
 
+@pytest.mark.django_db
+def test_build_your_own_add_to_cart_redirects_to_cart(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+    category = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        selection_type=BuildCategory.SelectionType.SINGLE,
+        is_required=True,
+        is_active=True,
+    )
+    option = BuildOption.objects.create(
+        category=category,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+        is_active=True,
+    )
+
+    response = client.post(
+        reverse("catalog:build_your_own"),
+        data={
+            "package": package.id,
+            f"category_{category.id}": str(option.id),
+            "recipient_name": "Sara",
+            "delivery_date": "2026-05-20",
+            "message_mode": "custom",
+            "custom_message": "Happy Birthday!",
+            "message_template": "",
+            "add_to_cart": "1",
+        },
+    )
+
+    assert response.status_code == 302
+    assert response.url == reverse("orders:cart")
+
+    cart_items = client.session.get("cart_items", [])
+
+    assert len(cart_items) == 1
+    assert cart_items[0]["item_type"] == "build_your_own"
+    assert cart_items[0]["name"] == "Build Your Own - Premium Box"
+    assert cart_items[0]["unit_price"] == "28.00"
+    assert cart_items[0]["selected_options"][0]["group_name"] == "Flowers"

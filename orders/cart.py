@@ -13,7 +13,21 @@ def save_cart(session, cart_items):
 
 
 def _cart_item_identity(item):
+    item_type = item.get("item_type", "gift_box")
+
+    if item_type == "build_your_own":
+        return (
+            item_type,
+            item["package_id"],
+            item["recipient_name"],
+            item["gift_message"],
+            item["delivery_date"],
+            item["unit_price"],
+            item["selected_options"],
+        )
+
     return (
+        item_type,
         item["gift_box_id"],
         item["recipient_name"],
         item["gift_message"],

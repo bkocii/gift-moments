@@ -226,6 +226,7 @@ def build_your_own(request):
         package = form.cleaned_data["package"]
         total_price = Decimal(str(package.base_price))
         selected_categories = []
+        cart_selected_categories = []
 
         for category in categories:
             field_name = f"category_{category.id}"
@@ -250,6 +251,19 @@ def build_your_own(request):
                         "options": selected_options,
                     }
                 )
+                cart_selected_categories.append(
+                    {
+                        "group_name": category.name,
+                        "is_multiple": True,
+                        "options": [
+                            {
+                                "name": option.name,
+                                "price_delta": str(option.price_delta),
+                            }
+                            for option in selected_options
+                        ],
+                    }
+                )
             else:
                 selected_option = None
                 if selected_value:
@@ -268,20 +282,59 @@ def build_your_own(request):
                         "option": selected_option,
                     }
                 )
+                cart_selected_categories.append(
+                    {
+                        "group_name": category.name,
+                        "is_multiple": False,
+                        "option": (
+                            {
+                                "name": selected_option.name,
+                                "price_delta": str(selected_option.price_delta),
+                            }
+                            if selected_option
+                            else None
+                        ),
+                    }
+                )
 
         final_message = ""
+        message_template = form.cleaned_data.get("message_template")
+
         if form.cleaned_data["message_mode"] == "template":
-            message_template = form.cleaned_data["message_template"]
             final_message = message_template.text if message_template else ""
         else:
             final_message = form.cleaned_data["custom_message"]
+
+        if "add_to_cart" in request.POST:
+            cart_item = {
+                "item_type": "build_your_own",
+                "package_id": package.id,
+                "name": f"Build Your Own - {package.name}",
+                "slug": package.slug,
+                "base_price": str(package.base_price),
+                "unit_price": str(total_price),
+                "line_total": str(total_price),
+                "quantity": 1,
+                "recipient_name": form.cleaned_data["recipient_name"],
+                "gift_message": final_message,
+                "delivery_date": form.cleaned_data["delivery_date"].isoformat(),
+                "selected_options": cart_selected_categories,
+                "message_mode": form.cleaned_data["message_mode"],
+                "message_template_title": (
+                    message_template.title if message_template else ""
+                ),
+            }
+
+            add_to_cart(request.session, cart_item)
+            messages.success(request, "Custom gift added to cart successfully.")
+            return redirect("orders:cart")
 
         submitted_data = {
             "package": package,
             "recipient_name": form.cleaned_data["recipient_name"],
             "delivery_date": form.cleaned_data["delivery_date"],
             "message_mode": form.cleaned_data["message_mode"],
-            "message_template": form.cleaned_data.get("message_template"),
+            "message_template": message_template,
             "final_message": final_message,
             "selected_categories": selected_categories,
             "total_price": total_price,
@@ -299,4 +352,3 @@ def build_your_own(request):
             "submitted_data": submitted_data,
         },
     )
-
