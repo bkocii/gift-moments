@@ -2002,3 +2002,125 @@ a {
     align-items: center;
 }
 
+.detail-image-clickable {
+    cursor: zoom-in;
+}
+
+.lightbox-body-lock {
+    overflow: hidden;
+}
+
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: none;
+}
+
+.lightbox-overlay.lightbox-open {
+    display: block;
+}
+
+.lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(24, 16, 18, 0.82);
+    backdrop-filter: blur(6px);
+}
+
+.lightbox-dialog {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 32px auto;
+    padding: 20px;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #2f1f1c;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.lightbox-image-wrap {
+    background: white;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+}
+
+.lightbox-image-wrap img {
+    width: 100%;
+    max-height: 76vh;
+    object-fit: contain;
+    display: block;
+    background: #f8f1ee;
+}
+
+.lightbox-thumb-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.lightbox-thumb {
+    height: 86px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0;
+    cursor: pointer;
+    appearance: none;
+}
+
+.lightbox-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lightbox-thumb-active {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 760px) {
+    .lightbox-dialog {
+        margin: 16px auto;
+        padding: 14px;
+    }
+
+    .lightbox-image-wrap {
+        border-radius: 20px;
+    }
+
+    .lightbox-thumb-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .lightbox-thumb {
+        height: 64px;
+        border-radius: 12px;
+    }
+
+    .lightbox-close {
+        top: 2px;
+        right: 2px;
+    }
+}
+

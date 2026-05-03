@@ -6,55 +6,105 @@
 <section class="detail-page detail-page-v2">
     <div class="detail-card detail-card-v2">
         <div class="detail-media-panel">
-            <div class="detail-image detail-image-v2">
-                {% if main_image_url %}
-                    <img
-                        id="main-product-image"
-                        src="{{ main_image_url }}"
-                        alt="{{ main_image_alt }}"
-                    >
-                {% else %}
-                    <div class="image-placeholder image-placeholder-v2">
-                        <span>🎁</span>
-                    </div>
-                {% endif %}
+    <div
+        class="detail-image detail-image-v2 detail-image-clickable"
+        id="open-lightbox"
+        role="button"
+        tabindex="0"
+        aria-label="Open image gallery"
+    >
+        {% if main_image_url %}
+            <img
+                id="main-product-image"
+                src="{{ main_image_url }}"
+                alt="{{ main_image_alt }}"
+            >
+        {% else %}
+            <div class="image-placeholder image-placeholder-v2">
+                <span>🎁</span>
             </div>
+        {% endif %}
+    </div>
 
-            {% if gift_box.image or gallery_images %}
-                <div class="detail-thumb-row">
-                    {% if gift_box.image %}
-                        <button
-                            type="button"
-                            class="detail-thumb detail-thumb-button {% if not primary_gallery_image %}detail-thumb-active{% endif %}"
-                            data-image-url="{{ gift_box.image.url }}"
-                            data-image-alt="{{ gift_box.name }}"
-                            aria-label="Show main image"
-                        >
-                            <img src="{{ gift_box.image.url }}" alt="{{ gift_box.name }}">
-                        </button>
-                    {% endif %}
-
-                    {% for photo in gallery_images %}
-                        <button
-                            type="button"
-                            class="detail-thumb detail-thumb-button {% if primary_gallery_image and primary_gallery_image.pk == photo.pk %}detail-thumb-active{% elif not primary_gallery_image and not gift_box.image and forloop.first %}detail-thumb-active{% endif %}"
-                            data-image-url="{{ photo.image.url }}"
-                            data-image-alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
-                            aria-label="Show gallery image {{ forloop.counter }}"
-                        >
-                            <img
-                                src="{{ photo.image.url }}"
-                                alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
-                            >
-                        </button>
-                    {% endfor %}
-                </div>
+    {% if gift_box.image or gallery_images %}
+        <div class="detail-thumb-row">
+            {% if gift_box.image %}
+                <button
+                    type="button"
+                    class="detail-thumb detail-thumb-button {% if not primary_gallery_image %}detail-thumb-active{% endif %}"
+                    data-image-url="{{ gift_box.image.url }}"
+                    data-image-alt="{{ gift_box.name }}"
+                    aria-label="Show main image"
+                >
+                    <img src="{{ gift_box.image.url }}" alt="{{ gift_box.name }}">
+                </button>
             {% endif %}
 
-            <div class="detail-image-note">
-                <span>Beautifully wrapped and ready to gift</span>
-            </div>
+            {% for photo in gallery_images %}
+                <button
+                    type="button"
+                    class="detail-thumb detail-thumb-button {% if primary_gallery_image and primary_gallery_image.pk == photo.pk %}detail-thumb-active{% elif not primary_gallery_image and not gift_box.image and forloop.first %}detail-thumb-active{% endif %}"
+                    data-image-url="{{ photo.image.url }}"
+                    data-image-alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
+                    aria-label="Show gallery image {{ forloop.counter }}"
+                >
+                    <img
+                        src="{{ photo.image.url }}"
+                        alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
+                    >
+                </button>
+            {% endfor %}
         </div>
+    {% endif %}
+
+    <div class="detail-image-note">
+        <span>Beautifully wrapped and ready to gift</span>
+    </div>
+</div>
+            <div class="lightbox-overlay" id="product-lightbox" aria-hidden="true">
+                <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+
+                <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="Product image gallery">
+                    <button type="button" class="lightbox-close" id="close-lightbox" aria-label="Close gallery">
+                        ×
+                    </button>
+
+                    <div class="lightbox-image-wrap">
+                        <img id="lightbox-main-image" src="" alt="">
+                    </div>
+
+                    {% if gift_box.image or gallery_images %}
+                        <div class="lightbox-thumb-row">
+                            {% if gift_box.image %}
+                                <button
+                                    type="button"
+                                    class="lightbox-thumb {% if not primary_gallery_image %}lightbox-thumb-active{% endif %}"
+                                    data-image-url="{{ gift_box.image.url }}"
+                                    data-image-alt="{{ gift_box.name }}"
+                                    aria-label="Show main image in lightbox"
+                                >
+                                    <img src="{{ gift_box.image.url }}" alt="{{ gift_box.name }}">
+                                </button>
+                            {% endif %}
+
+                            {% for photo in gallery_images %}
+                                <button
+                                    type="button"
+                                    class="lightbox-thumb {% if primary_gallery_image and primary_gallery_image.pk == photo.pk %}lightbox-thumb-active{% elif not primary_gallery_image and not gift_box.image and forloop.first %}lightbox-thumb-active{% endif %}"
+                                    data-image-url="{{ photo.image.url }}"
+                                    data-image-alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
+                                    aria-label="Show gallery image {{ forloop.counter }} in lightbox"
+                                >
+                                    <img
+                                        src="{{ photo.image.url }}"
+                                        alt="{% if photo.alt_text %}{{ photo.alt_text }}{% else %}{{ gift_box.name }}{% endif %}"
+                                    >
+                                </button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
 
         <div class="detail-content detail-content-v2">
             <span class="eyebrow">Curated gift box</span>
@@ -203,24 +253,108 @@
         const mainImage = document.getElementById("main-product-image");
         const thumbs = document.querySelectorAll(".detail-thumb-button");
 
-        if (!mainImage || !thumbs.length) {
-            return;
+        const lightbox = document.getElementById("product-lightbox");
+        const openLightbox = document.getElementById("open-lightbox");
+        const closeLightbox = document.getElementById("close-lightbox");
+        const lightboxBackdrop = document.getElementById("lightbox-backdrop");
+        const lightboxMainImage = document.getElementById("lightbox-main-image");
+        const lightboxThumbs = document.querySelectorAll(".lightbox-thumb");
+
+        function syncMainImage(imageUrl, imageAlt) {
+            if (mainImage) {
+                mainImage.src = imageUrl;
+                mainImage.alt = imageAlt || "";
+            }
         }
 
-        thumbs.forEach((thumb) => {
+        function setActiveThumb(thumbList, activeThumb) {
+            thumbList.forEach((item) => item.classList.remove("detail-thumb-active", "lightbox-thumb-active"));
+            if (activeThumb) {
+                if (activeThumb.classList.contains("detail-thumb-button")) {
+                    activeThumb.classList.add("detail-thumb-active");
+                }
+                if (activeThumb.classList.contains("lightbox-thumb")) {
+                    activeThumb.classList.add("lightbox-thumb-active");
+                }
+            }
+        }
+
+        function openLightboxWithCurrentImage() {
+            if (!lightbox || !lightboxMainImage || !mainImage) {
+                return;
+            }
+
+            lightboxMainImage.src = mainImage.src;
+            lightboxMainImage.alt = mainImage.alt || "";
+            lightbox.classList.add("lightbox-open");
+            lightbox.setAttribute("aria-hidden", "false");
+            document.body.classList.add("lightbox-body-lock");
+        }
+
+        function closeLightboxModal() {
+            if (!lightbox) {
+                return;
+            }
+
+            lightbox.classList.remove("lightbox-open");
+            lightbox.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("lightbox-body-lock");
+        }
+
+        thumbs.forEach((thumb, index) => {
             thumb.addEventListener("click", function () {
                 const imageUrl = thumb.dataset.imageUrl;
                 const imageAlt = thumb.dataset.imageAlt || "";
 
-                mainImage.src = imageUrl;
-                mainImage.alt = imageAlt;
+                syncMainImage(imageUrl, imageAlt);
+                setActiveThumb(thumbs, thumb);
 
-                thumbs.forEach((item) => {
-                    item.classList.remove("detail-thumb-active");
-                });
-
-                thumb.classList.add("detail-thumb-active");
+                if (lightboxThumbs[index]) {
+                    lightboxMainImage.src = imageUrl;
+                    lightboxMainImage.alt = imageAlt;
+                    setActiveThumb(lightboxThumbs, lightboxThumbs[index]);
+                }
             });
+        });
+
+        lightboxThumbs.forEach((thumb, index) => {
+            thumb.addEventListener("click", function () {
+                const imageUrl = thumb.dataset.imageUrl;
+                const imageAlt = thumb.dataset.imageAlt || "";
+
+                lightboxMainImage.src = imageUrl;
+                lightboxMainImage.alt = imageAlt;
+                setActiveThumb(lightboxThumbs, thumb);
+
+                if (thumbs[index]) {
+                    syncMainImage(imageUrl, imageAlt);
+                    setActiveThumb(thumbs, thumbs[index]);
+                }
+            });
+        });
+
+        if (openLightbox) {
+            openLightbox.addEventListener("click", openLightboxWithCurrentImage);
+            openLightbox.addEventListener("keydown", function (event) {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openLightboxWithCurrentImage();
+                }
+            });
+        }
+
+        if (closeLightbox) {
+            closeLightbox.addEventListener("click", closeLightboxModal);
+        }
+
+        if (lightboxBackdrop) {
+            lightboxBackdrop.addEventListener("click", closeLightboxModal);
+        }
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                closeLightboxModal();
+            }
         });
     });
 </script>
