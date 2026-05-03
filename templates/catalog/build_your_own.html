@@ -15,158 +15,212 @@
 
     <div class="builder-layout">
         <div class="builder-main">
-            <section class="builder-section">
-                <div class="builder-section-head">
-                    <h3>1. Choose your package</h3>
-                    <p>Select the box style and starting price.</p>
-                </div>
+            <form method="post" class="builder-form">
+                {% csrf_token %}
 
-                <div class="builder-package-grid">
-                    {% for package in packages %}
-                        <article class="builder-card">
-                            <div class="builder-card-image">
-                                {% if package.image %}
-                                    <img src="{{ package.image.url }}" alt="{{ package.name }}">
-                                {% else %}
+                <section class="builder-section">
+                    <div class="builder-section-head">
+                        <h3>1. Choose your package</h3>
+                        <p>Select the box style and starting price.</p>
+                    </div>
+
+                    {% if form.package.errors %}
+                        <div class="field-error">{{ form.package.errors }}</div>
+                    {% endif %}
+
+                    <div class="builder-package-grid">
+                        {% for radio in form.package %}
+                            <label class="builder-card builder-card-selectable">
+                                <div class="builder-card-image">
                                     <div class="builder-card-placeholder">
                                         <span>🎁</span>
                                     </div>
+                                </div>
+
+                                <div class="builder-card-body">
+                                    {{ radio.tag }}
+                                    <h4>{{ radio.choice_label }}</h4>
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="builder-section">
+                    <div class="builder-section-head">
+                        <h3>2. Choose your gift items</h3>
+                        <p>Select one or more options from each category.</p>
+                    </div>
+
+                    <div class="builder-category-stack">
+                        {% for item in category_fields %}
+                            <article class="builder-category-card">
+                                <div class="builder-category-top">
+                                    <h4>{{ item.category.name }}</h4>
+                                    <span>
+                                        {% if item.category.selection_type == "single" %}
+                                            Single select
+                                        {% else %}
+                                            Multiple select
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                {% if item.category.description %}
+                                    <p>{{ item.category.description }}</p>
                                 {% endif %}
-                            </div>
 
-                            <div class="builder-card-body">
-                                <h4>{{ package.name }}</h4>
-                                {% if package.description %}
-                                    <p>{{ package.description }}</p>
+                                <div class="option-group-body option-group-body-v2">
+                                    {{ item.field }}
+                                </div>
+
+                                {% if item.field.errors %}
+                                    <div class="field-error">{{ item.field.errors }}</div>
                                 {% endif %}
-                                <strong>From €{{ package.base_price }}</strong>
-                            </div>
-                        </article>
-                    {% empty %}
-                        <div class="empty-state">
-                            <h3>No packages yet</h3>
-                            <p>Add Build Your Own packages from Django admin.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
 
-            <section class="builder-section">
-                <div class="builder-section-head">
-                    <h3>2. Available categories</h3>
-                    <p>These are the sections customers will customize.</p>
-                </div>
+                <section class="builder-section">
+                    <div class="builder-section-head">
+                        <h3>3. Gift details</h3>
+                        <p>Add recipient information and delivery date.</p>
+                    </div>
 
-                <div class="builder-category-grid">
-                    {% for category in categories %}
-                        <article class="builder-category-card">
-                            <div class="builder-category-top">
-                                <h4>{{ category.name }}</h4>
-                                <span>
-                                    {% if category.selection_type == "single" %}
-                                        Single select
-                                    {% else %}
-                                        Multiple select
-                                    {% endif %}
-                                </span>
-                            </div>
-
-                            {% if category.description %}
-                                <p>{{ category.description }}</p>
+                    <div class="form-grid form-grid-v2">
+                        <div class="form-field">
+                            <label for="{{ form.recipient_name.id_for_label }}">Recipient name</label>
+                            {{ form.recipient_name }}
+                            {% if form.recipient_name.errors %}
+                                <div class="field-error">{{ form.recipient_name.errors }}</div>
                             {% endif %}
-
-                            <ul class="builder-option-list">
-                                {% for option in category.options.all %}
-                                    {% if option.is_active %}
-                                        <li>
-                                            <strong>{{ option.name }}</strong>
-                                            <span>
-                                                {% if option.price_delta > 0 %}
-                                                    +€{{ option.price_delta }}
-                                                {% else %}
-                                                    Included
-                                                {% endif %}
-                                            </span>
-                                        </li>
-                                    {% endif %}
-                                {% empty %}
-                                    <li>No options added yet.</li>
-                                {% endfor %}
-                            </ul>
-                        </article>
-                    {% empty %}
-                        <div class="empty-state">
-                            <h3>No categories yet</h3>
-                            <p>Add Build Your Own categories and options in admin.</p>
                         </div>
-                    {% endfor %}
-                </div>
-            </section>
 
-            <section class="builder-section">
-                <div class="builder-section-head">
-                    <h3>3. Suggested messages</h3>
-                    <p>Customers will be able to write their own or pick one of these.</p>
-                </div>
-
-                <div class="builder-message-grid">
-                    {% for category in message_categories %}
-                        <article class="builder-message-card">
-                            <h4>{{ category.name }}</h4>
-
-                            <ul class="builder-message-list">
-                                {% for template in category.templates.all %}
-                                    {% if template.is_active %}
-                                        <li>
-                                            <strong>{{ template.title }}</strong>
-                                            <p>{{ template.text }}</p>
-                                        </li>
-                                    {% endif %}
-                                {% empty %}
-                                    <li>No templates added yet.</li>
-                                {% endfor %}
-                            </ul>
-                        </article>
-                    {% empty %}
-                        <div class="empty-state">
-                            <h3>No message templates yet</h3>
-                            <p>Add message categories and templates in admin.</p>
+                        <div class="form-field">
+                            <label for="{{ form.delivery_date.id_for_label }}">Delivery date</label>
+                            {{ form.delivery_date }}
+                            {% if form.delivery_date.errors %}
+                                <div class="field-error">{{ form.delivery_date.errors }}</div>
+                            {% endif %}
                         </div>
-                    {% endfor %}
+                    </div>
+                </section>
+
+                <section class="builder-section">
+                    <div class="builder-section-head">
+                        <h3>4. Choose your message</h3>
+                        <p>Write your own or choose a suggested message.</p>
+                    </div>
+
+                    <div class="option-group-body option-group-body-v2">
+                        {{ form.message_mode }}
+                    </div>
+
+                    {% if form.message_mode.errors %}
+                        <div class="field-error">{{ form.message_mode.errors }}</div>
+                    {% endif %}
+
+                    <div class="builder-message-mode-grid">
+                        <div class="form-field">
+                            <label for="{{ form.custom_message.id_for_label }}">Custom message</label>
+                            {{ form.custom_message }}
+                            {% if form.custom_message.errors %}
+                                <div class="field-error">{{ form.custom_message.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-field">
+                            <label for="{{ form.message_template.id_for_label }}">Suggested message</label>
+                            {{ form.message_template }}
+                            {% if form.message_template.errors %}
+                                <div class="field-error">{{ form.message_template.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+
+                <div class="detail-submit-row">
+                    <button type="submit" class="btn btn-primary btn-detail-primary">
+                        Review selection
+                    </button>
                 </div>
-            </section>
+            </form>
         </div>
 
         <aside class="builder-summary">
             <h3>Your Gift Summary</h3>
-            <div class="summary-row">
-                <span>Package</span>
-                <strong>Not selected</strong>
-            </div>
-            <div class="summary-row">
-                <span>Flowers</span>
-                <strong>Not selected</strong>
-            </div>
-            <div class="summary-row">
-                <span>Chocolate</span>
-                <strong>Not selected</strong>
-            </div>
-            <div class="summary-row">
-                <span>Wine</span>
-                <strong>Not selected</strong>
-            </div>
-            <div class="summary-row">
-                <span>Extras</span>
-                <strong>Not selected</strong>
-            </div>
-            <div class="summary-row total">
-                <span>Total</span>
-                <strong>€0.00</strong>
-            </div>
 
-            <button type="button" class="btn btn-primary summary-btn" disabled>
-                Add to cart
-            </button>
+            {% if submitted_data %}
+                <div class="summary-row">
+                    <span>Package</span>
+                    <strong>{{ submitted_data.package.name }}</strong>
+                </div>
+
+                {% for item in submitted_data.selected_categories %}
+                    <div class="summary-row">
+                        <span>{{ item.category.name }}</span>
+                        <strong>
+                            {% if item.value %}
+                                {{ item.value }}
+                            {% else %}
+                                Not selected
+                            {% endif %}
+                        </strong>
+                    </div>
+                {% endfor %}
+
+                <div class="summary-row">
+                    <span>Recipient</span>
+                    <strong>{{ submitted_data.recipient_name }}</strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Delivery date</span>
+                    <strong>{{ submitted_data.delivery_date }}</strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Message</span>
+                    <strong>
+                        {% if submitted_data.message_mode == "template" and submitted_data.message_template %}
+                            {{ submitted_data.message_template.title }}
+                        {% else %}
+                            Custom message
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <strong>Next step</strong>
+                </div>
+            {% else %}
+                <div class="summary-row">
+                    <span>Package</span>
+                    <strong>Not selected</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Flowers</span>
+                    <strong>Not selected</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Chocolate</span>
+                    <strong>Not selected</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Wine</span>
+                    <strong>Not selected</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Extras</span>
+                    <strong>Not selected</strong>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <strong>€0.00</strong>
+                </div>
+            {% endif %}
         </aside>
     </div>
 </section>

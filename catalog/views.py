@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
-from catalog.forms import GiftCustomizationForm
+from catalog.forms import BuildYourOwnForm, GiftCustomizationForm
 from catalog.models import (
     BuildCategory,
     BuildYourOwnPackage,
@@ -208,6 +208,42 @@ def build_your_own(request):
         .order_by("sort_order", "name")
     )
 
+    form = BuildYourOwnForm(request.POST or None, categories=categories)
+
+    category_fields = [
+        {
+            "category": category,
+            "field": form[f"category_{category.id}"],
+        }
+        for category in categories
+    ]
+
+    submitted_data = None
+
+    if request.method == "POST" and form.is_valid():
+        selected_categories = []
+
+        for category in categories:
+            field_name = f"category_{category.id}"
+            selected_value = form.cleaned_data.get(field_name)
+
+            selected_categories.append(
+                {
+                    "category": category,
+                    "value": selected_value,
+                }
+            )
+
+        submitted_data = {
+            "package": form.cleaned_data["package"],
+            "recipient_name": form.cleaned_data["recipient_name"],
+            "delivery_date": form.cleaned_data["delivery_date"],
+            "message_mode": form.cleaned_data["message_mode"],
+            "custom_message": form.cleaned_data.get("custom_message"),
+            "message_template": form.cleaned_data.get("message_template"),
+            "selected_categories": selected_categories,
+        }
+
     return render(
         request,
         "catalog/build_your_own.html",
@@ -215,5 +251,8 @@ def build_your_own(request):
             "packages": packages,
             "categories": categories,
             "message_categories": message_categories,
+            "form": form,
+            "category_fields": category_fields,
+            "submitted_data": submitted_data,
         },
     )

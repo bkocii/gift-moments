@@ -392,3 +392,81 @@ def test_build_your_own_page_shows_packages_categories_and_messages(client):
     assert category.name.encode() in response.content
     assert b"Red Roses" in response.content
     assert b"Warm Birthday Wish" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_valid_post_shows_summary(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+    category = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        selection_type=BuildCategory.SelectionType.SINGLE,
+        is_required=True,
+        is_active=True,
+    )
+    option = BuildOption.objects.create(
+        category=category,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+        is_active=True,
+    )
+    message_category = MessageCategory.objects.create(
+        name="Birthday",
+        slug="birthday",
+        is_active=True,
+    )
+    template = MessageTemplate.objects.create(
+        category=message_category,
+        title="Warm Birthday Wish",
+        text="Wishing you joy and happiness.",
+        is_active=True,
+    )
+
+    response = client.post(
+        reverse("catalog:build_your_own"),
+        data={
+            "package": package.id,
+            f"category_{category.id}": str(option.id),
+            "recipient_name": "Sara",
+            "delivery_date": "2026-05-20",
+            "message_mode": "template",
+            "message_template": template.id,
+            "custom_message": "",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"Premium Box" in response.content
+    assert b"Sara" in response.content
+    assert b"Warm Birthday Wish" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_requires_message_based_on_mode(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+
+    response = client.post(
+        reverse("catalog:build_your_own"),
+        data={
+            "package": package.id,
+            "recipient_name": "Sara",
+            "delivery_date": "2026-05-20",
+            "message_mode": "custom",
+            "custom_message": "",
+            "message_template": "",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"Please write a message." in response.content
