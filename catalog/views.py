@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
@@ -221,27 +223,68 @@ def build_your_own(request):
     submitted_data = None
 
     if request.method == "POST" and form.is_valid():
+        package = form.cleaned_data["package"]
+        total_price = Decimal(str(package.base_price))
         selected_categories = []
 
         for category in categories:
             field_name = f"category_{category.id}"
             selected_value = form.cleaned_data.get(field_name)
 
-            selected_categories.append(
-                {
-                    "category": category,
-                    "value": selected_value,
-                }
-            )
+            if category.selection_type == BuildCategory.SelectionType.MULTIPLE:
+                selected_ids = selected_value or []
+                selected_options = list(
+                    category.options.filter(
+                        is_active=True,
+                        id__in=selected_ids,
+                    ).order_by("sort_order", "name")
+                )
+
+                for option in selected_options:
+                    total_price += option.price_delta
+
+                selected_categories.append(
+                    {
+                        "category_name": category.name,
+                        "is_multiple": True,
+                        "options": selected_options,
+                    }
+                )
+            else:
+                selected_option = None
+                if selected_value:
+                    selected_option = category.options.filter(
+                        is_active=True,
+                        id=selected_value,
+                    ).first()
+
+                if selected_option:
+                    total_price += selected_option.price_delta
+
+                selected_categories.append(
+                    {
+                        "category_name": category.name,
+                        "is_multiple": False,
+                        "option": selected_option,
+                    }
+                )
+
+        final_message = ""
+        if form.cleaned_data["message_mode"] == "template":
+            message_template = form.cleaned_data["message_template"]
+            final_message = message_template.text if message_template else ""
+        else:
+            final_message = form.cleaned_data["custom_message"]
 
         submitted_data = {
-            "package": form.cleaned_data["package"],
+            "package": package,
             "recipient_name": form.cleaned_data["recipient_name"],
             "delivery_date": form.cleaned_data["delivery_date"],
             "message_mode": form.cleaned_data["message_mode"],
-            "custom_message": form.cleaned_data.get("custom_message"),
             "message_template": form.cleaned_data.get("message_template"),
+            "final_message": final_message,
             "selected_categories": selected_categories,
+            "total_price": total_price,
         }
 
     return render(
@@ -256,3 +299,4 @@ def build_your_own(request):
             "submitted_data": submitted_data,
         },
     )
+

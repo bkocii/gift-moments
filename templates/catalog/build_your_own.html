@@ -159,12 +159,22 @@
 
                 {% for item in submitted_data.selected_categories %}
                     <div class="summary-row">
-                        <span>{{ item.category.name }}</span>
+                        <span>{{ item.category_name }}</span>
                         <strong>
-                            {% if item.value %}
-                                {{ item.value }}
+                            {% if item.is_multiple %}
+                                {% if item.options %}
+                                    {% for option in item.options %}
+                                        {{ option.name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    Not selected
+                                {% endif %}
                             {% else %}
-                                Not selected
+                                {% if item.option %}
+                                    {{ item.option.name }}
+                                {% else %}
+                                    Not selected
+                                {% endif %}
                             {% endif %}
                         </strong>
                     </div>
@@ -191,10 +201,19 @@
                     </strong>
                 </div>
 
+                <div class="builder-summary-message">
+                    <strong>Final card message</strong>
+                    <p>{{ submitted_data.final_message }}</p>
+                </div>
+
                 <div class="summary-row total">
                     <span>Total</span>
-                    <strong>Next step</strong>
+                    <strong>€{{ submitted_data.total_price }}</strong>
                 </div>
+
+                <button type="button" class="btn btn-primary summary-btn" disabled>
+                    Add to cart next
+                </button>
             {% else %}
                 <div class="summary-row">
                     <span>Package</span>
@@ -220,6 +239,10 @@
                     <span>Total</span>
                     <strong>€0.00</strong>
                 </div>
+
+                <button type="button" class="btn btn-primary summary-btn" disabled>
+                    Add to cart next
+                </button>
             {% endif %}
         </aside>
     </div>
