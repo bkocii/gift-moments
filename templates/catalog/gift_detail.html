@@ -7,24 +7,25 @@
     <div class="detail-card detail-card-v2">
         <div class="detail-media-panel">
     <div
-        class="detail-image detail-image-v2 detail-image-clickable"
-        id="open-lightbox"
-        role="button"
-        tabindex="0"
-        aria-label="Open image gallery"
-    >
-        {% if main_image_url %}
-            <img
-                id="main-product-image"
-                src="{{ main_image_url }}"
-                alt="{{ main_image_alt }}"
-            >
-        {% else %}
-            <div class="image-placeholder image-placeholder-v2">
-                <span>🎁</span>
-            </div>
-        {% endif %}
-    </div>
+    class="detail-image detail-image-v2 detail-image-clickable detail-zoom-wrap"
+    id="open-lightbox"
+    role="button"
+    tabindex="0"
+    aria-label="Open image gallery"
+>
+    {% if main_image_url %}
+        <img
+            id="main-product-image"
+            class="detail-zoom-image"
+            src="{{ main_image_url }}"
+            alt="{{ main_image_alt }}"
+        >
+    {% else %}
+        <div class="image-placeholder image-placeholder-v2">
+            <span>🎁</span>
+        </div>
+    {% endif %}
+</div>
 
     {% if gift_box.image or gallery_images %}
         <div class="detail-thumb-row">
@@ -251,6 +252,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const mainImage = document.getElementById("main-product-image");
+        const zoomWrap = document.querySelector(".detail-zoom-wrap");
         const thumbs = document.querySelectorAll(".detail-thumb-button");
 
         const lightbox = document.getElementById("product-lightbox");
@@ -351,11 +353,26 @@
             lightboxBackdrop.addEventListener("click", closeLightboxModal);
         }
 
+        if (zoomWrap && mainImage && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            zoomWrap.addEventListener("mousemove", function (event) {
+                const rect = zoomWrap.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 100;
+                const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+                mainImage.style.transformOrigin = `${x}% ${y}%`;
+            });
+
+            zoomWrap.addEventListener("mouseleave", function () {
+                mainImage.style.transformOrigin = "center center";
+            });
+        }
+
         document.addEventListener("keydown", function (event) {
             if (event.key === "Escape") {
                 closeLightboxModal();
             }
         });
+
     });
 </script>
 
