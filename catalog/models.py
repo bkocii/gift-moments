@@ -58,6 +58,39 @@ class GiftBox(models.Model):
     def get_absolute_url(self):
         return reverse("catalog:gift_detail", kwargs={"slug": self.slug})
 
+    @property
+    def primary_gallery_image(self):
+        return self.gallery_images.filter(is_active=True, is_primary=True).first()
+
+    @property
+    def first_active_gallery_image(self):
+        return (
+            self.gallery_images.filter(is_active=True)
+            .order_by("sort_order", "id")
+            .first()
+        )
+
+    @property
+    def display_image(self):
+        if self.primary_gallery_image:
+            return self.primary_gallery_image.image
+
+        if self.image:
+            return self.image
+
+        first_gallery = self.first_active_gallery_image
+        if first_gallery:
+            return first_gallery.image
+
+        return None
+
+    @property
+    def display_image_alt(self):
+        if self.primary_gallery_image and self.primary_gallery_image.alt_text:
+            return self.primary_gallery_image.alt_text
+
+        return self.name
+
 
 class GiftBoxItem(models.Model):
     gift_box = models.ForeignKey(

@@ -10,7 +10,7 @@ def home(request):
 
     featured_gifts = (
         GiftBox.objects.filter(is_active=True, is_featured=True)
-        .prefetch_related("box_items__item", "occasions")
+        .prefetch_related("box_items__item", "occasions", "gallery_images")
         .order_by("sort_order", "name")
     )
 
@@ -34,3 +34,37 @@ def home(request):
             "selected_occasion_slug": selected_occasion_slug,
         },
     )
+
+
+@pytest.mark.django_db
+def test_home_page_uses_primary_gallery_image_for_gift_card(client):
+    from catalog.models import GiftBox, GiftBoxImage
+
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses, chocolate and wine.",
+        base_price="49.90",
+        is_active=True,
+        is_featured=True,
+        image="gift_boxes/main.jpg",
+    )
+
+    GiftBoxImage.objects.create(
+        gift_box=gift_box,
+        image="gift_boxes/gallery/secondary.jpg",
+        is_active=True,
+        is_primary=False,
+    )
+    GiftBoxImage.objects.create(
+        gift_box=gift_box,
+        image="gift_boxes/gallery/primary.jpg",
+        alt_text="Primary homepage image",
+        is_active=True,
+        is_primary=True,
+    )
+
+    response = client.get(reverse("home"))
+
+    assert response.status_code == 200
+    assert b"gift_boxes/gallery/primary.jpg" in response.content

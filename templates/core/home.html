@@ -84,14 +84,13 @@
             {% for gift in featured_gifts %}
                 <article class="gift-card gift-card-v2">
                     <a href="{{ gift.get_absolute_url }}" class="gift-card-image gift-card-image-v2">
-                        {% if gift.image %}
-                            <img src="{{ gift.image.url }}" alt="{{ gift.name }}">
+                        {% if gift.display_image %}
+                            <img src="{{ gift.display_image.url }}" alt="{{ gift.display_image_alt }}">
                         {% else %}
                             <div class="gift-card-placeholder gift-card-placeholder-v2">
                                 <span>🎁</span>
                             </div>
                         {% endif %}
-
                         {% if gift.is_featured %}
                             <span class="gift-favorite-badge">Featured</span>
                         {% endif %}
