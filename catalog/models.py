@@ -153,9 +153,18 @@ class GiftBoxImage(models.Model):
     alt_text = models.CharField(max_length=160, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    is_primary = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["sort_order", "id"]
 
     def __str__(self):
         return f"{self.gift_box.name} image {self.pk}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.is_primary:
+            type(self).objects.filter(gift_box=self.gift_box).exclude(
+                pk=self.pk
+            ).update(is_primary=False)

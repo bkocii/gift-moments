@@ -286,3 +286,38 @@ def test_gift_detail_page_shows_gallery_images(client):
     assert response.status_code == 200
     assert b"Gallery photo 1" in response.content
     assert b"Gallery photo 2" in response.content
+
+
+@pytest.mark.django_db
+def test_gift_detail_uses_primary_gallery_image_as_main_image(client):
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses, chocolates and wine.",
+        base_price="49.90",
+        is_active=True,
+        image="gift_boxes/main.jpg",
+    )
+
+    GiftBoxImage.objects.create(
+        gift_box=gift_box,
+        image="gift_boxes/gallery/test1.jpg",
+        alt_text="Gallery photo 1",
+        is_active=True,
+        is_primary=False,
+    )
+    GiftBoxImage.objects.create(
+        gift_box=gift_box,
+        image="gift_boxes/gallery/test2.jpg",
+        alt_text="Primary gallery photo",
+        is_active=True,
+        is_primary=True,
+    )
+
+    response = client.get(
+        reverse("catalog:gift_detail", kwargs={"slug": gift_box.slug})
+    )
+
+    assert response.status_code == 200
+    assert b"gift_boxes/gallery/test2.jpg" in response.content
+    assert b"Primary gallery photo" in response.content

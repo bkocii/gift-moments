@@ -43,7 +43,7 @@ class GiftOptionInline(admin.TabularInline):
 class GiftBoxImageInline(admin.TabularInline):
     model = GiftBoxImage
     extra = 1
-    fields = ("image", "alt_text", "sort_order", "is_active")
+    fields = ("image", "alt_text", "sort_order", "is_active", "is_primary")
 
 
 @admin.register(GiftOptionGroup)

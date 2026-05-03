@@ -154,3 +154,30 @@ def test_occasion_can_store_image():
     )
 
     assert occasion.image.name == "occasions/birthday.jpg"
+
+
+@pytest.mark.django_db
+def test_only_one_primary_gallery_image_per_gift_box():
+    gift_box = GiftBox.objects.create(
+        name="Romantic Evening Box",
+        slug="romantic-evening-box",
+        short_description="Roses and wine.",
+        base_price="49.90",
+    )
+
+    first_image = GiftBoxImage.objects.create(
+        gift_box=gift_box,
+        image="gift_boxes/gallery/test1.jpg",
+        is_primary=True,
+    )
+    second_image = GiftBoxImage.objects.create(
+        gift_box=gift_box,
+        image="gift_boxes/gallery/test2.jpg",
+        is_primary=True,
+    )
+
+    first_image.refresh_from_db()
+    second_image.refresh_from_db()
+
+    assert first_image.is_primary is False
+    assert second_image.is_primary is True
