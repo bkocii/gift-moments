@@ -2416,3 +2416,60 @@ a {
     line-height: 1.6;
     white-space: pre-line;
 }
+
+.package-choice-card {
+    position: relative;
+    cursor: pointer;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease;
+}
+
+.package-choice-card:hover {
+    transform: translateY(-3px);
+    border-color: #dfb7bf;
+    box-shadow: 0 18px 36px rgba(47, 31, 28, 0.08);
+}
+
+.builder-radio-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.package-choice-card input[type="radio"] {
+    accent-color: #8f1d3f;
+    transform: scale(1.1);
+}
+
+.package-choice-card:has(input[type="radio"]:checked) {
+    border-color: #8f1d3f;
+    background: #fff5f4;
+    box-shadow: 0 18px 40px rgba(143, 29, 63, 0.12);
+}
+
+.package-choice-card:has(input[type="radio"]:checked)::after {
+    content: "Selected";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: #8f1d3f;
+    color: white;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.builder-selected-package-note {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+}

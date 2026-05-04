@@ -776,3 +776,21 @@ def test_build_your_own_page_uses_required_override_from_package_rule(client):
 
     assert response.status_code == 200
     assert b"This field is required." in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_shows_package_description_and_price(client):
+    BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        description="A luxury gift box for special moments.",
+        base_price="40.00",
+        is_active=True,
+    )
+
+    response = client.get(reverse("catalog:build_your_own"))
+
+    assert response.status_code == 200
+    assert b"Premium Box" in response.content
+    assert b"A luxury gift box for special moments." in response.content
+    assert b"40.00" in response.content

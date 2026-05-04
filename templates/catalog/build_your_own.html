@@ -22,6 +22,12 @@
                     <div class="builder-section-head">
                         <h3>1. Choose your package</h3>
                         <p>Select the box style and starting price.</p>
+                        {% if selected_package %}
+                            <p class="builder-selected-package-note">
+                                Showing options for <strong>{{ selected_package.name }}</strong>.
+                                Change the package and click “Update review” to refresh available sections.
+                            </p>
+                        {% endif %}
                     </div>
 
                     {% if form.package.errors %}
@@ -29,21 +35,43 @@
                     {% endif %}
 
                     <div class="builder-package-grid">
-                        {% for radio in form.package %}
+                        {% for package in packages %}
                             <label class="builder-card builder-card-selectable package-choice-card">
                                 <div class="builder-card-image">
-                                    <div class="builder-card-placeholder">
-                                        <span>🎁</span>
-                                    </div>
+                                    {% if package.image %}
+                                        <img src="{{ package.image.url }}" alt="{{ package.name }}">
+                                    {% else %}
+                                        <div class="builder-card-placeholder">
+                                            <span>🎁</span>
+                                        </div>
+                                    {% endif %}
                                 </div>
 
                                 <div class="builder-card-body">
                                     <div class="builder-radio-wrap">
-                                        {{ radio.tag }}
+                                        <input
+                                            type="radio"
+                                            name="package"
+                                            value="{{ package.id }}"
+                                            {% if form.package.value|stringformat:"s" == package.id|stringformat:"s" %}checked{% endif %}
+                                        >
+                                        <span class="builder-radio-label">Select package</span>
                                     </div>
-                                    <h4>{{ radio.choice_label }}</h4>
+
+                                    <h4>{{ package.name }}</h4>
+
+                                    {% if package.description %}
+                                        <p>{{ package.description }}</p>
+                                    {% endif %}
+
+                                    <strong>From €{{ package.base_price }}</strong>
                                 </div>
                             </label>
+                        {% empty %}
+                            <div class="empty-state">
+                                <h3>No packages yet</h3>
+                                <p>Add Build Your Own packages from Django admin.</p>
+                            </div>
                         {% endfor %}
                     </div>
                 </section>
@@ -343,6 +371,21 @@
 
         if (templateSelect) {
             templateSelect.addEventListener("change", updateTemplatePreview);
+        }
+
+        const firstError = document.querySelector(
+            ".field-error, .errorlist, .form-errors"
+        );
+
+        if (firstError) {
+            const targetSection = firstError.closest(".builder-section") || firstError;
+
+            setTimeout(function () {
+                targetSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }, 100);
         }
 
         updateMessageModeVisibility();
