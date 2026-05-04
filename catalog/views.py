@@ -11,6 +11,7 @@ from catalog.models import (
     GiftBox,
     GiftOptionGroup,
     MessageCategory,
+    PackageCategoryRule,
 )
 from orders.cart import add_to_cart
 
@@ -198,7 +199,7 @@ def build_your_own(request):
         "sort_order", "name"
     )
 
-    categories = (
+    all_active_categories = (
         BuildCategory.objects.filter(is_active=True)
         .prefetch_related("options")
         .order_by("sort_order", "name")
@@ -210,14 +211,42 @@ def build_your_own(request):
         .order_by("sort_order", "name")
     )
 
-    form = BuildYourOwnForm(request.POST or None, categories=categories)
+    selected_package = None
+    category_rule_map = {}
+    active_categories = list(all_active_categories)
+
+    package_id = request.POST.get("package") or request.GET.get("package")
+    if package_id:
+        selected_package = packages.filter(pk=package_id).first()
+
+    if selected_package:
+        package_rules = list(
+            PackageCategoryRule.objects.filter(
+                package=selected_package,
+                is_enabled=True,
+                category__is_active=True,
+            )
+            .select_related("category")
+            .order_by("sort_order", "id")
+        )
+
+        if package_rules:
+            active_categories = [rule.category for rule in package_rules]
+            category_rule_map = {rule.category_id: rule for rule in package_rules}
+
+    form = BuildYourOwnForm(
+        request.POST or None,
+        categories=active_categories,
+        category_rule_map=category_rule_map,
+    )
 
     category_fields = [
         {
             "category": category,
             "field": form[f"category_{category.id}"],
+            "rule": category_rule_map.get(category.id),
         }
-        for category in categories
+        for category in active_categories
     ]
 
     submitted_data = None
@@ -228,7 +257,7 @@ def build_your_own(request):
         selected_categories = []
         cart_selected_categories = []
 
-        for category in categories:
+        for category in active_categories:
             field_name = f"category_{category.id}"
             selected_value = form.cleaned_data.get(field_name)
 
@@ -345,10 +374,11 @@ def build_your_own(request):
         "catalog/build_your_own.html",
         {
             "packages": packages,
-            "categories": categories,
+            "categories": active_categories,
             "message_categories": message_categories,
             "form": form,
             "category_fields": category_fields,
             "submitted_data": submitted_data,
+            "selected_package": selected_package,
         },
     )

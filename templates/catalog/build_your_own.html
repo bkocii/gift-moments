@@ -59,6 +59,20 @@
                                 <div class="builder-category-top">
                                     <h4>{{ item.category.name }}</h4>
                                     <span>
+                                        {% if item.rule and item.rule.is_required_override is not None %}
+                                            {% if item.rule.is_required_override %}
+                                                Required
+                                            {% else %}
+                                                Optional
+                                            {% endif %}
+                                        {% else %}
+                                            {% if item.category.is_required %}
+                                                Required
+                                            {% else %}
+                                                Optional
+                                            {% endif %}
+                                        {% endif %}
+                                        •
                                         {% if item.category.selection_type == "single" %}
                                             Single select
                                         {% else %}

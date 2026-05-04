@@ -106,29 +106,36 @@ class BuildYourOwnForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-select"}),
     )
 
-    def __init__(self, *args, categories=None, **kwargs):
+    def __init__(self, *args, categories=None, category_rule_map=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.categories = categories or []
+        self.categories = list(categories or [])
+        self.category_rule_map = category_rule_map or {}
 
         for category in self.categories:
             active_options = category.options.filter(is_active=True).order_by(
                 "sort_order", "name"
             )
             choices = [(str(option.id), str(option)) for option in active_options]
-
             field_name = f"category_{category.id}"
+
+            rule = self.category_rule_map.get(category.id)
+            is_required = (
+                rule.is_required_override
+                if rule and rule.is_required_override is not None
+                else category.is_required
+            )
 
             if category.selection_type == BuildCategory.SelectionType.MULTIPLE:
                 self.fields[field_name] = forms.MultipleChoiceField(
                     choices=choices,
-                    required=category.is_required,
+                    required=is_required,
                     widget=forms.CheckboxSelectMultiple,
                     label=category.name,
                 )
             else:
                 self.fields[field_name] = forms.ChoiceField(
                     choices=choices,
-                    required=category.is_required,
+                    required=is_required,
                     widget=forms.RadioSelect,
                     label=category.name,
                 )

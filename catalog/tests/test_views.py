@@ -15,6 +15,7 @@ from catalog.models import (
     GiftOptionGroup,
     MessageCategory,
     MessageTemplate,
+    PackageCategoryRule,
 )
 
 
@@ -650,7 +651,7 @@ def test_build_your_own_add_to_cart_redirects_to_cart(client):
 
 @pytest.mark.django_db
 def test_build_your_own_page_shows_template_preview_container(client):
-    package = BuildYourOwnPackage.objects.create(
+    BuildYourOwnPackage.objects.create(
         name="Premium Box",
         slug="premium-box",
         base_price="20.00",
@@ -674,3 +675,104 @@ def test_build_your_own_page_shows_template_preview_container(client):
     assert b"Suggested message" in response.content
     assert b"Selected message preview" in response.content
     assert b"Warm Birthday Wish" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_filters_categories_by_selected_package(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+
+    flowers = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        is_active=True,
+    )
+    chocolate = BuildCategory.objects.create(
+        name="Chocolate",
+        slug="chocolate",
+        is_active=True,
+    )
+
+    BuildOption.objects.create(
+        category=flowers,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+        is_active=True,
+    )
+    BuildOption.objects.create(
+        category=chocolate,
+        name="Dark Chocolate Bar",
+        slug="dark-chocolate-bar",
+        price_delta="4.00",
+        is_active=True,
+    )
+
+    PackageCategoryRule.objects.create(
+        package=package,
+        category=flowers,
+        is_enabled=True,
+        sort_order=1,
+    )
+
+    response = client.get(
+        reverse("catalog:build_your_own"),
+        {"package": package.id},
+    )
+
+    assert response.status_code == 200
+    assert b"Flowers" in response.content
+    assert b"Red Roses" in response.content
+    assert b"Dark Chocolate Bar" not in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_uses_required_override_from_package_rule(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+
+    flowers = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        selection_type=BuildCategory.SelectionType.SINGLE,
+        is_required=False,
+        is_active=True,
+    )
+    BuildOption.objects.create(
+        category=flowers,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+        is_active=True,
+    )
+
+    PackageCategoryRule.objects.create(
+        package=package,
+        category=flowers,
+        is_enabled=True,
+        is_required_override=True,
+        sort_order=1,
+    )
+
+    response = client.post(
+        reverse("catalog:build_your_own"),
+        data={
+            "package": package.id,
+            "recipient_name": "Sara",
+            "delivery_date": "2026-05-20",
+            "message_mode": "custom",
+            "custom_message": "Hello!",
+            "message_template": "",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"This field is required." in response.content
