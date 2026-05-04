@@ -646,3 +646,31 @@ def test_build_your_own_add_to_cart_redirects_to_cart(client):
     assert cart_items[0]["name"] == "Build Your Own - Premium Box"
     assert cart_items[0]["unit_price"] == "28.00"
     assert cart_items[0]["selected_options"][0]["group_name"] == "Flowers"
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_shows_template_preview_container(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+    message_category = MessageCategory.objects.create(
+        name="Birthday",
+        slug="birthday",
+        is_active=True,
+    )
+    MessageTemplate.objects.create(
+        category=message_category,
+        title="Warm Birthday Wish",
+        text="Wishing you joy and happiness.",
+        is_active=True,
+    )
+
+    response = client.get(reverse("catalog:build_your_own"))
+
+    assert response.status_code == 200
+    assert b"Suggested message" in response.content
+    assert b"Selected message preview" in response.content
+    assert b"Warm Birthday Wish" in response.content

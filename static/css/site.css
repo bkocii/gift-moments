@@ -2375,3 +2375,44 @@ a {
     line-height: 1.6;
     white-space: pre-line;
 }
+
+.package-choice-card {
+    position: relative;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.package-choice-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px rgba(47, 31, 28, 0.08);
+    border-color: #dfb7bf;
+}
+
+.builder-radio-wrap {
+    margin-bottom: 10px;
+}
+
+.package-choice-card input[type="radio"] {
+    accent-color: #8f1d3f;
+    transform: scale(1.15);
+}
+
+.builder-template-preview {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 18px;
+    background: #fff9f7;
+    border: 1px solid #f0e1dc;
+}
+
+.builder-template-preview strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.builder-template-preview p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    white-space: pre-line;
+}
