@@ -215,7 +215,9 @@ def build_your_own(request):
     category_rule_map = {}
     active_categories = list(all_active_categories)
 
+    builder_action = request.POST.get("builder_action", "").strip()
     package_id = request.POST.get("package") or request.GET.get("package")
+
     if package_id:
         selected_package = packages.filter(pk=package_id).first()
 
@@ -234,11 +236,138 @@ def build_your_own(request):
             active_categories = [rule.category for rule in package_rules]
             category_rule_map = {rule.category_id: rule for rule in package_rules}
 
-    form = BuildYourOwnForm(
-        request.POST or None,
-        categories=active_categories,
-        category_rule_map=category_rule_map,
-    )
+    if request.method == "POST" and builder_action == "package_change":
+        form = BuildYourOwnForm(
+            categories=active_categories,
+            category_rule_map=category_rule_map,
+            initial={"package": selected_package.id if selected_package else None},
+        )
+        submitted_data = None
+    else:
+        form = BuildYourOwnForm(
+            request.POST or None,
+            categories=active_categories,
+            category_rule_map=category_rule_map,
+        )
+        submitted_data = None
+
+        if request.method == "POST" and form.is_valid():
+            package = form.cleaned_data["package"]
+            total_price = Decimal(str(package.base_price))
+            selected_categories = []
+            cart_selected_categories = []
+
+            for category in active_categories:
+                field_name = f"category_{category.id}"
+                selected_value = form.cleaned_data.get(field_name)
+
+                if category.selection_type == BuildCategory.SelectionType.MULTIPLE:
+                    selected_ids = selected_value or []
+                    selected_options = list(
+                        category.options.filter(
+                            is_active=True,
+                            id__in=selected_ids,
+                        ).order_by("sort_order", "name")
+                    )
+
+                    for option in selected_options:
+                        total_price += option.price_delta
+
+                    selected_categories.append(
+                        {
+                            "category_name": category.name,
+                            "is_multiple": True,
+                            "options": selected_options,
+                        }
+                    )
+                    cart_selected_categories.append(
+                        {
+                            "group_name": category.name,
+                            "is_multiple": True,
+                            "options": [
+                                {
+                                    "name": option.name,
+                                    "price_delta": str(option.price_delta),
+                                }
+                                for option in selected_options
+                            ],
+                        }
+                    )
+                else:
+                    selected_option = None
+                    if selected_value:
+                        selected_option = category.options.filter(
+                            is_active=True,
+                            id=selected_value,
+                        ).first()
+
+                    if selected_option:
+                        total_price += selected_option.price_delta
+
+                    selected_categories.append(
+                        {
+                            "category_name": category.name,
+                            "is_multiple": False,
+                            "option": selected_option,
+                        }
+                    )
+                    cart_selected_categories.append(
+                        {
+                            "group_name": category.name,
+                            "is_multiple": False,
+                            "option": (
+                                {
+                                    "name": selected_option.name,
+                                    "price_delta": str(selected_option.price_delta),
+                                }
+                                if selected_option
+                                else None
+                            ),
+                        }
+                    )
+
+            final_message = ""
+            message_template = form.cleaned_data.get("message_template")
+
+            if form.cleaned_data["message_mode"] == "template":
+                final_message = message_template.text if message_template else ""
+            else:
+                final_message = form.cleaned_data["custom_message"]
+
+            if "add_to_cart" in request.POST:
+                cart_item = {
+                    "item_type": "build_your_own",
+                    "package_id": package.id,
+                    "name": f"Build Your Own - {package.name}",
+                    "slug": package.slug,
+                    "base_price": str(package.base_price),
+                    "unit_price": str(total_price),
+                    "line_total": str(total_price),
+                    "quantity": 1,
+                    "recipient_name": form.cleaned_data["recipient_name"],
+                    "gift_message": final_message,
+                    "delivery_date": form.cleaned_data["delivery_date"].isoformat(),
+                    "selected_options": cart_selected_categories,
+                    "message_mode": form.cleaned_data["message_mode"],
+                    "message_template_title": (
+                        message_template.title if message_template else ""
+                    ),
+                }
+
+                add_to_cart(request.session, cart_item)
+                messages.success(request, "Custom gift added to cart successfully.")
+                return redirect("orders:cart")
+
+            submitted_data = {
+                "package": package,
+                "recipient_name": form.cleaned_data["recipient_name"],
+                "delivery_date": form.cleaned_data["delivery_date"],
+                "message_mode": form.cleaned_data["message_mode"],
+                "message_template": message_template,
+                "final_message": final_message,
+                "selected_categories": selected_categories,
+                "total_price": total_price,
+            }
 
     category_fields = [
         {
@@ -248,126 +377,6 @@ def build_your_own(request):
         }
         for category in active_categories
     ]
-
-    submitted_data = None
-
-    if request.method == "POST" and form.is_valid():
-        package = form.cleaned_data["package"]
-        total_price = Decimal(str(package.base_price))
-        selected_categories = []
-        cart_selected_categories = []
-
-        for category in active_categories:
-            field_name = f"category_{category.id}"
-            selected_value = form.cleaned_data.get(field_name)
-
-            if category.selection_type == BuildCategory.SelectionType.MULTIPLE:
-                selected_ids = selected_value or []
-                selected_options = list(
-                    category.options.filter(
-                        is_active=True,
-                        id__in=selected_ids,
-                    ).order_by("sort_order", "name")
-                )
-
-                for option in selected_options:
-                    total_price += option.price_delta
-
-                selected_categories.append(
-                    {
-                        "category_name": category.name,
-                        "is_multiple": True,
-                        "options": selected_options,
-                    }
-                )
-                cart_selected_categories.append(
-                    {
-                        "group_name": category.name,
-                        "is_multiple": True,
-                        "options": [
-                            {
-                                "name": option.name,
-                                "price_delta": str(option.price_delta),
-                            }
-                            for option in selected_options
-                        ],
-                    }
-                )
-            else:
-                selected_option = None
-                if selected_value:
-                    selected_option = category.options.filter(
-                        is_active=True,
-                        id=selected_value,
-                    ).first()
-
-                if selected_option:
-                    total_price += selected_option.price_delta
-
-                selected_categories.append(
-                    {
-                        "category_name": category.name,
-                        "is_multiple": False,
-                        "option": selected_option,
-                    }
-                )
-                cart_selected_categories.append(
-                    {
-                        "group_name": category.name,
-                        "is_multiple": False,
-                        "option": (
-                            {
-                                "name": selected_option.name,
-                                "price_delta": str(selected_option.price_delta),
-                            }
-                            if selected_option
-                            else None
-                        ),
-                    }
-                )
-
-        final_message = ""
-        message_template = form.cleaned_data.get("message_template")
-
-        if form.cleaned_data["message_mode"] == "template":
-            final_message = message_template.text if message_template else ""
-        else:
-            final_message = form.cleaned_data["custom_message"]
-
-        if "add_to_cart" in request.POST:
-            cart_item = {
-                "item_type": "build_your_own",
-                "package_id": package.id,
-                "name": f"Build Your Own - {package.name}",
-                "slug": package.slug,
-                "base_price": str(package.base_price),
-                "unit_price": str(total_price),
-                "line_total": str(total_price),
-                "quantity": 1,
-                "recipient_name": form.cleaned_data["recipient_name"],
-                "gift_message": final_message,
-                "delivery_date": form.cleaned_data["delivery_date"].isoformat(),
-                "selected_options": cart_selected_categories,
-                "message_mode": form.cleaned_data["message_mode"],
-                "message_template_title": (
-                    message_template.title if message_template else ""
-                ),
-            }
-
-            add_to_cart(request.session, cart_item)
-            messages.success(request, "Custom gift added to cart successfully.")
-            return redirect("orders:cart")
-
-        submitted_data = {
-            "package": package,
-            "recipient_name": form.cleaned_data["recipient_name"],
-            "delivery_date": form.cleaned_data["delivery_date"],
-            "message_mode": form.cleaned_data["message_mode"],
-            "message_template": message_template,
-            "final_message": final_message,
-            "selected_categories": selected_categories,
-            "total_price": total_price,
-        }
 
     return render(
         request,

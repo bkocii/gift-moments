@@ -794,3 +794,62 @@ def test_build_your_own_page_shows_package_description_and_price(client):
     assert b"Premium Box" in response.content
     assert b"A luxury gift box for special moments." in response.content
     assert b"40.00" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_package_change_post_refreshes_categories_without_summary(
+    client,
+):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+
+    flowers = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        is_active=True,
+    )
+    chocolate = BuildCategory.objects.create(
+        name="Chocolate",
+        slug="chocolate",
+        is_active=True,
+    )
+
+    BuildOption.objects.create(
+        category=flowers,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+        is_active=True,
+    )
+    BuildOption.objects.create(
+        category=chocolate,
+        name="Dark Chocolate Bar",
+        slug="dark-chocolate-bar",
+        price_delta="4.00",
+        is_active=True,
+    )
+
+    PackageCategoryRule.objects.create(
+        package=package,
+        category=flowers,
+        is_enabled=True,
+        sort_order=1,
+    )
+
+    response = client.post(
+        reverse("catalog:build_your_own"),
+        data={
+            "package": package.id,
+            "builder_action": "package_change",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"Flowers" in response.content
+    assert b"Red Roses" in response.content
+    assert b"Dark Chocolate Bar" not in response.content
+    assert b"Final card message" not in response.content

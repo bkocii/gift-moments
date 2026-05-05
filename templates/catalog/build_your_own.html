@@ -16,6 +16,7 @@
     <div class="builder-layout">
         <div class="builder-main">
             <form method="post" class="builder-form" id="build-your-own-form">
+                <input type="hidden" name="builder_action" id="builder-action-input" value="">
                 {% csrf_token %}
 
                 <section class="builder-section">
@@ -25,7 +26,7 @@
                         {% if selected_package %}
                             <p class="builder-selected-package-note">
                                 Showing options for <strong>{{ selected_package.name }}</strong>.
-                                Change the package and click “Update review” to refresh available sections.
+                                Changing the package refreshes available sections automatically.
                             </p>
                         {% endif %}
                     </div>
@@ -196,7 +197,13 @@
 
                 <div class="detail-submit-row">
                     <button type="submit" class="btn btn-primary btn-detail-primary">
-                        {% if submitted_data %}Update review{% else %}Review selection{% endif %}
+                        {% if submitted_data %}
+                            Update review
+                        {% elif selected_package %}
+                            Review selection
+                        {% else %}
+                            Choose package first
+                        {% endif %}
                     </button>
                 </div>
             </form>
@@ -331,6 +338,9 @@
                 {% endfor %}
             {% endfor %}
         };
+        const builderForm = document.getElementById("build-your-own-form");
+        const builderActionInput = document.getElementById("builder-action-input");
+        const packageInputs = document.querySelectorAll('input[name="package"]');
 
         function getSelectedMessageMode() {
             const selected = document.querySelector('input[name="message_mode"]:checked');
@@ -386,6 +396,29 @@
                 });
             }, 100);
         }
+
+        packageInputs.forEach((input) => {
+            input.addEventListener("change", function () {
+                if (!builderForm || !builderActionInput) {
+                    return;
+                }
+
+                builderActionInput.value = "package_change";
+                builderForm.submit();
+            });
+        });
+
+        const manualSubmitButtons = builderForm
+            ? builderForm.querySelectorAll('button[type="submit"]:not([name="add_to_cart"])')
+            : [];
+
+        manualSubmitButtons.forEach((button) => {
+            button.addEventListener("click", function () {
+                if (builderActionInput) {
+                    builderActionInput.value = "";
+                }
+            });
+        });
 
         updateMessageModeVisibility();
         updateTemplatePreview();
