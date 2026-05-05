@@ -15,7 +15,7 @@
 
     <div class="builder-layout">
         <div class="builder-main">
-            <form method="post" class="builder-form">
+            <form method="post" class="builder-form" id="build-your-own-form">
                 {% csrf_token %}
 
                 <section class="builder-section">
@@ -195,22 +195,9 @@
                 </section>
 
                 <div class="detail-submit-row">
-                    {% if submitted_data %}
-                        <div class="detail-submit-row">
-                            <button type="submit" name="add_to_cart" value="1" class="btn btn-primary btn-detail-primary">
-                                Add to cart
-                            </button>
-                            <button type="submit" class="btn btn-secondary">
-                                Update review
-                            </button>
-                        </div>
-                    {% else %}
-                        <div class="detail-submit-row">
-                            <button type="submit" class="btn btn-primary btn-detail-primary">
-                                Review selection
-                            </button>
-                        </div>
-                    {% endif %}
+                    <button type="submit" class="btn btn-primary btn-detail-primary">
+                        {% if submitted_data %}Update review{% else %}Review selection{% endif %}
+                    </button>
                 </div>
             </form>
         </div>
@@ -278,9 +265,21 @@
                     <strong>€{{ submitted_data.total_price }}</strong>
                 </div>
 
-                <button type="button" class="btn btn-primary summary-btn" disabled>
-                    Add to cart next
-                </button>
+                {% if submitted_data %}
+                    <button
+                        type="submit"
+                        name="add_to_cart"
+                        value="1"
+                        form="build-your-own-form"
+                        class="btn btn-primary summary-btn"
+                    >
+                        Add to cart
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-primary summary-btn" disabled>
+                        Add to cart
+                    </button>
+                {% endif %}
             {% else %}
                 <div class="summary-row">
                     <span>Package</span>
