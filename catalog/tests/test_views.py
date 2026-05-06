@@ -355,7 +355,7 @@ def test_build_your_own_page_loads(client):
 
 
 @pytest.mark.django_db
-def test_build_your_own_page_shows_packages_categories_and_messages(client):
+def test_build_your_own_page_shows_packages_and_messages_on_initial_load(client):
     package = BuildYourOwnPackage.objects.create(
         name="Premium Box",
         slug="premium-box",
@@ -390,9 +390,9 @@ def test_build_your_own_page_shows_packages_categories_and_messages(client):
 
     assert response.status_code == 200
     assert package.name.encode() in response.content
-    assert category.name.encode() in response.content
-    assert b"Red Roses" in response.content
+    assert b"Choose a package first" in response.content
     assert b"Warm Birthday Wish" in response.content
+    assert b"Red Roses" not in response.content
 
 
 @pytest.mark.django_db
@@ -850,6 +850,89 @@ def test_build_your_own_package_change_post_refreshes_categories_without_summary
 
     assert response.status_code == 200
     assert b"Flowers" in response.content
-    assert b"Red Roses" in response.content
     assert b"Dark Chocolate Bar" not in response.content
     assert b"Final card message" not in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_shows_choose_package_first_guide(client):
+    response = client.get(reverse("catalog:build_your_own"))
+
+    assert response.status_code == 200
+    assert b"Choose a package first" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_shows_selected_package_summary_block(client):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        description="Luxury package",
+        base_price="40.00",
+        is_active=True,
+    )
+
+    response = client.get(
+        reverse("catalog:build_your_own"),
+        {"package": package.id},
+    )
+
+    assert response.status_code == 200
+    assert b"Selected package" in response.content
+    assert b"Premium Box" in response.content
+    assert b"40.00" in response.content
+
+
+@pytest.mark.django_db
+def test_build_your_own_page_shows_filtered_category_options_after_package_selection(
+    client,
+):
+    package = BuildYourOwnPackage.objects.create(
+        name="Premium Box",
+        slug="premium-box",
+        base_price="20.00",
+        is_active=True,
+    )
+
+    flowers = BuildCategory.objects.create(
+        name="Flowers",
+        slug="flowers",
+        is_active=True,
+    )
+    chocolate = BuildCategory.objects.create(
+        name="Chocolate",
+        slug="chocolate",
+        is_active=True,
+    )
+
+    BuildOption.objects.create(
+        category=flowers,
+        name="Red Roses",
+        slug="red-roses",
+        price_delta="8.00",
+        is_active=True,
+    )
+    BuildOption.objects.create(
+        category=chocolate,
+        name="Dark Chocolate Bar",
+        slug="dark-chocolate-bar",
+        price_delta="4.00",
+        is_active=True,
+    )
+
+    PackageCategoryRule.objects.create(
+        package=package,
+        category=flowers,
+        is_enabled=True,
+        sort_order=1,
+    )
+
+    response = client.get(
+        reverse("catalog:build_your_own"),
+        {"package": package.id},
+    )
+
+    assert response.status_code == 200
+    assert b"Flowers" in response.content
+    assert b"Red Roses" in response.content
+    assert b"Dark Chocolate Bar" not in response.content

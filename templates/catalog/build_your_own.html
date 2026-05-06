@@ -82,48 +82,55 @@
                         <p>Select one or more options from each category.</p>
                     </div>
 
-                    <div class="builder-category-stack">
-                        {% for item in category_fields %}
-                            <article class="builder-category-card">
-                                <div class="builder-category-top">
-                                    <h4>{{ item.category.name }}</h4>
-                                    <span>
-                                        {% if item.rule and item.rule.is_required_override is not None %}
-                                            {% if item.rule.is_required_override %}
-                                                Required
+                    {% if selected_package %}
+                        <div class="builder-category-stack">
+                            {% for item in category_fields %}
+                                <article class="builder-category-card">
+                                    <div class="builder-category-top">
+                                        <h4>{{ item.category.name }}</h4>
+                                        <span>
+                                            {% if item.rule and item.rule.is_required_override is not None %}
+                                                {% if item.rule.is_required_override %}
+                                                    Required
+                                                {% else %}
+                                                    Optional
+                                                {% endif %}
                                             {% else %}
-                                                Optional
+                                                {% if item.category.is_required %}
+                                                    Required
+                                                {% else %}
+                                                    Optional
+                                                {% endif %}
                                             {% endif %}
-                                        {% else %}
-                                            {% if item.category.is_required %}
-                                                Required
+                                            •
+                                            {% if item.category.selection_type == "single" %}
+                                                Single select
                                             {% else %}
-                                                Optional
+                                                Multiple select
                                             {% endif %}
-                                        {% endif %}
-                                        •
-                                        {% if item.category.selection_type == "single" %}
-                                            Single select
-                                        {% else %}
-                                            Multiple select
-                                        {% endif %}
-                                    </span>
-                                </div>
+                                        </span>
+                                    </div>
 
-                                {% if item.category.description %}
-                                    <p>{{ item.category.description }}</p>
-                                {% endif %}
+                                    {% if item.category.description %}
+                                        <p>{{ item.category.description }}</p>
+                                    {% endif %}
 
-                                <div class="option-group-body option-group-body-v2">
-                                    {{ item.field }}
-                                </div>
+                                    <div class="option-group-body option-group-body-v2">
+                                        {{ item.field }}
+                                    </div>
 
-                                {% if item.field.errors %}
-                                    <div class="field-error">{{ item.field.errors }}</div>
-                                {% endif %}
-                            </article>
-                        {% endfor %}
-                    </div>
+                                    {% if item.field.errors %}
+                                        <div class="field-error">{{ item.field.errors }}</div>
+                                    {% endif %}
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="builder-empty-guide">
+                            <h4>Choose a package first</h4>
+                            <p>Select a package above to load the categories available for that build.</p>
+                        </div>
+                    {% endif %}
                 </section>
 
                 <section class="builder-section">
@@ -212,54 +219,90 @@
         <aside class="builder-summary">
             <h3>Your Gift Summary</h3>
 
-            {% if submitted_data %}
-                <div class="summary-row">
-                    <span>Package</span>
-                    <strong>{{ submitted_data.package.name }}</strong>
-                </div>
+                {% if selected_package %}
+                    <div class="builder-summary-package">
+                        <div class="builder-summary-package-media">
+                            {% if selected_package.image %}
+                                <img src="{{ selected_package.image.url }}" alt="{{ selected_package.name }}">
+                            {% else %}
+                                <div class="builder-summary-package-placeholder">🎁</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="builder-summary-package-body">
+                            <span class="builder-summary-package-label">Selected package</span>
+                            <strong>{{ selected_package.name }}</strong>
+                            <p>Base from €{{ selected_package.base_price }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if submitted_data %}
+                    <div class="summary-row">
+                        <span>Package</span>
+                        <strong>{{ submitted_data.package.name }}</strong>
+                    </div>
 
                 {% for item in submitted_data.selected_categories %}
-                    <div class="summary-row">
-                        <span>{{ item.category_name }}</span>
-                        <strong>
+                    <div class="builder-summary-selection">
+                        <span class="builder-summary-selection-label">{{ item.category_name }}</span>
+
+                        <div class="builder-summary-selection-values">
                             {% if item.is_multiple %}
                                 {% if item.options %}
                                     {% for option in item.options %}
-                                        {{ option.name }}{% if not forloop.last %}, {% endif %}
+                                        <span class="builder-summary-pill">
+                                            {{ option.name }}
+                                            {% if option.price_delta > 0 %}
+                                                <small>+€{{ option.price_delta }}</small>
+                                            {% endif %}
+                                        </span>
                                     {% endfor %}
                                 {% else %}
-                                    Not selected
+                                    <span class="builder-summary-empty">Not selected</span>
                                 {% endif %}
                             {% else %}
                                 {% if item.option %}
-                                    {{ item.option.name }}
+                                    <span class="builder-summary-pill">
+                                        {{ item.option.name }}
+                                        {% if item.option.price_delta > 0 %}
+                                            <small>+€{{ item.option.price_delta }}</small>
+                                        {% endif %}
+                                    </span>
                                 {% else %}
-                                    Not selected
+                                    <span class="builder-summary-empty">Not selected</span>
                                 {% endif %}
                             {% endif %}
-                        </strong>
+                        </div>
                     </div>
                 {% endfor %}
 
-                <div class="summary-row">
-                    <span>Recipient</span>
-                    <strong>{{ submitted_data.recipient_name }}</strong>
+                <div class="builder-summary-selection">
+                    <span class="builder-summary-selection-label">Recipient</span>
+                    <div class="builder-summary-selection-values">
+                        <span class="builder-summary-pill">{{ submitted_data.recipient_name }}</span>
+                    </div>
                 </div>
 
-                <div class="summary-row">
-                    <span>Delivery date</span>
-                    <strong>{{ submitted_data.delivery_date }}</strong>
+                <div class="builder-summary-selection">
+                    <span class="builder-summary-selection-label">Delivery date</span>
+                    <div class="builder-summary-selection-values">
+                        <span class="builder-summary-pill">{{ submitted_data.delivery_date }}</span>
+                    </div>
                 </div>
 
-                <div class="summary-row">
-                    <span>Message</span>
-                    <strong>
+                <div class="builder-summary-selection">
+                    <span class="builder-summary-selection-label">Message</span>
+
+                    <div class="builder-summary-selection-values">
                         {% if submitted_data.message_mode == "template" and submitted_data.message_template %}
-                            {{ submitted_data.message_template.title }}
+                            <span class="builder-summary-pill">
+                                {{ submitted_data.message_template.title }}
+                            </span>
                         {% else %}
-                            Custom message
+                            <span class="builder-summary-pill">Custom message</span>
                         {% endif %}
-                    </strong>
+                    </div>
                 </div>
 
                 <div class="builder-summary-message">
